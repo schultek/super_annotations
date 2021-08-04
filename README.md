@@ -59,16 +59,16 @@ Finally, run `flutter pub run build_runner build`, which will generate a `.g.dar
 ## Examples
 
 We prepared a few examples, that showcase a few different things that you can do with this package.
-Some of them mimic the basic functionality of popular code-generation libraries, such as [json_serializable](https://pub.dev/packages/json_serializable) and [freezed](https://pub.dev/packages/freezed). 
+Some of them mimic the basic functionality of popular code-generation libraries, 
+such as [json_serializable](https://pub.dev/packages/json_serializable) and [freezed](https://pub.dev/packages/freezed). 
 
 | Name | Status |
 | --- | --- |
 | [json\_serialization_example](https://github.com/schultek/super_annotations/tree/main/examples/json_serialization_example) | **Done** |
 | [sealed\_classes_example](https://github.com/schultek/super_annotations/tree/main/examples/sealed_classes_example) | **Done** |
-| [data\_class_example](https://github.com/schultek/super_annotations/tree/main/examples/data_class_example) | Todo |
+| [data\_class_example](https://github.com/schultek/super_annotations/tree/main/examples/data_class_example) | **Done** |
 | [api\_generation_example](https://github.com/schultek/super_annotations/tree/main/examples/api_generation_example) | Todo |
 | [mocking\_example](https://github.com/schultek/super_annotations/tree/main/examples/mocking_example) | Todo |
-| [generation\_strategies_example](https://github.com/schultek/super_annotations/tree/main/examples/generation_strategies_example) | Todo |
 
 ## How does it work?
 

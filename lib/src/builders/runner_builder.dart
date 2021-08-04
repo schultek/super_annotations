@@ -75,7 +75,7 @@ class RunnerBuilder {
       ${imports.write()}
       
       void main(List<String> args, SendPort port) {
-        CodeGen.currentFile = args[0];
+        CodeGen.currentFile = '${path.basename(buildStep.inputId.path)}';
         var library = Library((l) {
           ${runBefore.map((fn) => '$fn(l);\n').join()}
           
@@ -96,11 +96,7 @@ class RunnerBuilder {
 
     var resultFuture = dataPort.first;
 
-    await Isolate.spawnUri(
-      runnerId.uri,
-      [path.basename(buildStep.inputId.path)],
-      dataPort.sendPort,
-    );
+    await Isolate.spawnUri(runnerId.uri, [], dataPort.sendPort);
 
     return await resultFuture as String;
   }

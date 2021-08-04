@@ -4,18 +4,29 @@ import 'package:code_builder/code_builder.dart';
 
 export 'package:code_builder/code_builder.dart';
 
+/// To be extended by custom annotations
 abstract class ClassAnnotation {
   const ClassAnnotation();
+
+  /// Overwrite to modify the annotated class before being passed
+  /// to the [apply] method of any annotation
   void modify(ClassBuilder builder, Library library) {}
+
+  /// Receive the annotated class as target and modify the output library
   void apply(Class target, LibraryBuilder library) {}
 }
 
 class CodeGen {
+  /// Contains the path to the current source file for the build
   static String currentFile = '';
 
   //ignore: unused_element
   CodeGen._();
+
+  /// Use to annotate a function to be run at the beginning of the build phase
   const CodeGen.runBefore();
+
+  /// Use to annotate a function to be run at the end of the build phase
   const CodeGen.runAfter();
 }
 
