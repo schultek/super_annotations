@@ -14,6 +14,7 @@ extension ClassCodeBuilder on ClassElement {
         ${fields.isNotEmpty ? "..fields.addAll([${fields.map((f) => f.builder()).join(',')}])" : ''}
         ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder()).join(',')}])" : ''}
         ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => "refer('${m.escaped}')").join(',')}])" : ''}
+        ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder()).join(',')}])" : ''}
       )
       ${writes.map((w) => "..run((c) => $w().apply(c, l))").join("\n")};
     """;
@@ -70,6 +71,20 @@ extension ParameterCodeBuilder on ParameterElement {
         ..named = $isNamed
         ..required = ${isNamed && isNotOptional}
         ..defaultTo = ${hasDefaultValue ? "Code('${defaultValueCode!.replaceAll("'", "\\'")}')" : null}),
+    """;
+  }
+}
+
+extension MethodCodeBuilder on MethodElement {
+  String builder() {
+    return """
+      Method((m) => m
+        ..name = '$name'
+        ..returns = refer('${returnType.getDisplayString(withNullability: true)}')
+        ..requiredParameters.addAll([${parameters.where((p) => p.isRequiredPositional).map((p) => p.builder()).join()}])
+        ..optionalParameters.addAll([${parameters.where((p) => !p.isRequiredPositional).map((p) => p.builder()).join()}])
+        ..static = $isStatic
+      )
     """;
   }
 }
