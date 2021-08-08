@@ -17,9 +17,10 @@ const codeGenChecker = TypeChecker.fromRuntime(CodeGen);
 
 class RunnerBuilder {
   final BuildStep buildStep;
+  final Map<String, dynamic> config;
 
   final AssetId runnerId;
-  RunnerBuilder(this.buildStep)
+  RunnerBuilder(this.buildStep, this.config)
       : runnerId = buildStep.inputId.changeExtensionFull('.runner.g.dart');
 
   Future<void> create() async {
@@ -108,7 +109,9 @@ class RunnerBuilder {
   Future<String> run() async {
     await create();
     var result = await execute();
-    await cleanup();
+    if (config['cleanup'] != false) {
+      await cleanup();
+    }
     return result;
   }
 }

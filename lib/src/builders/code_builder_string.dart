@@ -4,9 +4,10 @@ import 'package:analyzer/dart/element/element.dart';
 
 extension ClassCodeBuilder on ClassElement {
   String builder([List<String> writes = const []]) {
-    var node = getNode() as ClassDeclaration;
+    var node = getNode() as ClassDeclaration?;
 
-    var mixins = node.withClause?.mixinTypes.map((t) => t.name.name) ?? [];
+    var mixins = node?.withClause?.mixinTypes.map((t) => t.name.name) ?? [];
+    var annotations = node?.metadata ?? <Annotation>[];
 
     return """
       Class((c) => c
@@ -15,6 +16,7 @@ extension ClassCodeBuilder on ClassElement {
         ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder()).join(',')}])" : ''}
         ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => "refer('${m.escaped}')").join(',')}])" : ''}
         ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder()).join(',')}])" : ''}
+        ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
       )
       ${writes.map((w) => "..run((c) => $w().apply(c, l))").join("\n")};
     """;
@@ -34,11 +36,47 @@ extension FieldCodeBuilder on FieldElement {
   }
 }
 
+extension AnnotationCodeBuilder on Annotation {
+  String builder() {
+    if (arguments != null) {
+      var str = "refer('${name.name}')";
+      if (constructorName != null) {
+        str += ".newInstanceNamed('${constructorName!.name}', ";
+      } else {
+        str += '.newInstance(';
+      }
+
+      var posArgs = <Expression>[];
+      var namedArgs = <String, Expression>{};
+
+      for (var a in arguments!.arguments) {
+        if (a is NamedExpression) {
+          namedArgs[a.name.label.name] = a.expression;
+        } else {
+          posArgs.add(a);
+        }
+      }
+
+      str +=
+          '[${posArgs.map((a) => "refer('${a.toString().replaceAll("'", "\\'")}')").join(', ')}]';
+
+      if (namedArgs.isNotEmpty) {
+        str +=
+            ', {${namedArgs.entries.map((e) => "'${e.key}': refer('${e.value.toString().replaceAll("'", "\\'")}')").join(', ')}}';
+      }
+
+      return '$str)';
+    } else {
+      return "refer('${name.name}')";
+    }
+  }
+}
+
 extension ConstructorCodeBuilder on ConstructorElement {
   String builder() {
     List<String> reqParams = [], optParams = [];
 
-    var node = getNode() as ConstructorDeclaration;
+    var node = getNode() as ConstructorDeclaration?;
 
     for (var p in parameters) {
       if (p.isOptional || p.isNamed) {
@@ -55,7 +93,7 @@ extension ConstructorCodeBuilder on ConstructorElement {
         ..constant = $isConst
         ${reqParams.isNotEmpty ? '..requiredParameters.addAll([${reqParams.join()}])' : ''}
         ${optParams.isNotEmpty ? '..optionalParameters.addAll([${optParams.join()}])' : ''}
-        ${node.redirectedConstructor != null ? "..redirect = refer('${node.redirectedConstructor!.toString()}')" : ''})
+        ${node?.redirectedConstructor != null ? "..redirect = refer('${node!.redirectedConstructor!.toString()}')" : ''})
     """;
   }
 }
@@ -77,6 +115,8 @@ extension ParameterCodeBuilder on ParameterElement {
 
 extension MethodCodeBuilder on MethodElement {
   String builder() {
+    var node = getNode() as MethodDeclaration?;
+    var annotations = node?.metadata ?? <Annotation>[];
     return """
       Method((m) => m
         ..name = '$name'
@@ -84,17 +124,18 @@ extension MethodCodeBuilder on MethodElement {
         ..requiredParameters.addAll([${parameters.where((p) => p.isRequiredPositional).map((p) => p.builder()).join()}])
         ..optionalParameters.addAll([${parameters.where((p) => !p.isRequiredPositional).map((p) => p.builder()).join()}])
         ..static = $isStatic
+        ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
       )
     """;
   }
 }
 
 extension ElementToNode on Element {
-  AstNode getNode() {
+  AstNode? getNode() {
     var node =
-        (session!.getParsedLibraryByElement2(library!) as ParsedLibraryResult)
-            .getElementDeclaration(this)!
-            .node;
+        (session?.getParsedLibraryByElement2(library!) as ParsedLibraryResult?)
+            ?.getElementDeclaration(this)
+            ?.node;
     return node;
   }
 }

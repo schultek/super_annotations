@@ -12,7 +12,7 @@ class SuperAnnotationsBuilder extends Builder {
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
-    var output = await RunnerBuilder(buildStep).run();
+    var output = await RunnerBuilder(buildStep, options.config).run();
 
     var outputId = buildStep.inputId.changeExtensionFull('.g.dart');
     await buildStep.writeAsString(outputId, DartFormatter().format(output));

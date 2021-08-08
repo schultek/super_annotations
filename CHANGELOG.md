@@ -1,3 +1,7 @@
+# 0.1.3
+
+- Added support for annotations
+
 # 0.1.2
 
 - Added support for methods
