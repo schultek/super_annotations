@@ -43,6 +43,9 @@ class MyAnnotation extends ClassAnnotation {
 }
 ```
 
+The `clazz` parameter will hold all the information about the annotated class, and the 
+`library` parameter can be used to produce your code generation output in a formal way.
+
 After that, use your custom annotation as you like:
 
 ```dart
@@ -69,6 +72,65 @@ such as [json_serializable](https://pub.dev/packages/json_serializable) and [fre
 | [data\_class_example](https://github.com/schultek/super_annotations/tree/main/examples/data_class_example) | **Done** |
 | [api\_generation_example](https://github.com/schultek/super_annotations/tree/main/examples/api_generation_example) | Todo |
 | [mocking\_example](https://github.com/schultek/super_annotations/tree/main/examples/mocking_example) | Todo |
+
+## Annotation parameters and Resolved Annotations
+
+With `super_annotations`, your build and runtime environment share the same codebase. This enables a few unique perks, 
+that you wouldn't normally get with normal code generation.
+
+Look at the following example:
+
+```dart
+@MyAnnotation("abc", 42)
+class MyClass {}
+
+class MyAnnotation extends ClassAnnotation {
+  final String id;
+  final int myValue;
+  const MyAnnotation(this.id, this.myValue);
+
+  @override
+  void apply(Class clazz, LibraryBuilder library) {
+    // read on
+  }
+}
+```
+
+In the `apply` method, you can now access `this.id` and `this.myValue`, which will hold the appropriate values from the actual annotation.
+When you use your annotation with different classes, the fields will always have the correct value matching the currently analyzed class.
+
+On top of that, you can even access annotations that are not **super annotations** with ease:
+
+```dart
+
+/// Just a regular annotation, nothing 'super'
+class MyOtherAnnotation {
+  final String label;
+  const MyOtherAnnotation(this.label);
+}
+
+@MyAnnotation()
+class MyClass {
+  @MyOtherAnnotation("important_label")
+  void doSomething() {}
+}
+
+/// The real deal
+class MyAnnotation extends ClassAnnotation {
+  const MyAnnotation();
+
+  @override
+  void apply(Class clazz, LibraryBuilder library) {
+    // use [resolvedAnnotations] on any element (e.g. method) to get the actual annotation objects
+    var methodAnnotation = clazz.methods.first.resolvedAnnotations.first;
+    if (methodAnnotation is MyOtherAnnotation) { // yes
+      // do something with [methodAnnotation.label]
+    }
+  }
+}
+```
+
+**Combine these two methods and bring your code generation game to a whole new level.**
 
 ## How does it work?
 

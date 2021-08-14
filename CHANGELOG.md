@@ -1,3 +1,7 @@
+# 0.1.5
+
+- Added support for resolved annotations and values
+
 # 0.1.4
 
 - Added support for annotation parameters

@@ -1,6 +1,10 @@
 library super_annotations;
 
 import 'package:code_builder/code_builder.dart';
+// ignore: implementation_imports
+import 'package:code_builder/src/mixins/annotations.dart';
+// ignore: implementation_imports
+import 'package:code_builder/src/specs/code.dart';
 
 export 'package:code_builder/code_builder.dart';
 
@@ -57,4 +61,45 @@ extension InvokeConstructor on Constructor {
         ? refer(className).newInstanceNamed(name!, posArgs, namedArgs)
         : refer(className).newInstance(posArgs, namedArgs);
   }
+}
+
+/// Special type of expression to store an annotation object during runtime
+class ResolvedAnnotation<T> extends Expression {
+  final String source;
+  final T annotation;
+  ResolvedAnnotation(this.annotation, this.source);
+
+  @override
+  R accept<R>(covariant ExpressionVisitor<R> visitor, [R? context]) {
+    return visitor.visitAnnotation(this, context);
+  }
+}
+
+/// Extension to quickly access all resolved annotations of a spec element
+extension HasResolvedAnnotations on HasAnnotations {
+  List<dynamic> get resolvedAnnotations {
+    return annotations
+        .whereType<ResolvedAnnotation>()
+        .map((a) => a.annotation)
+        .toList();
+  }
+}
+
+/// Special type of code to hold a resolved value during runtime
+class ResolvedValue<T> implements Code {
+  final T value;
+  final String code;
+
+  ResolvedValue(this.value, this.code);
+
+  @override
+  R accept<R>(covariant CodeVisitor<R> visitor, [R? context]) {
+    return visitor.visitStaticCode(Code(code) as StaticCode, context);
+  }
+}
+
+/// Extension to quickly access the resolved default value of a parameter
+extension DefaultValue on Parameter {
+  dynamic get defaultValue =>
+      defaultTo is ResolvedValue ? (defaultTo! as ResolvedValue).value : null;
 }
