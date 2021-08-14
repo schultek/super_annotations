@@ -1,3 +1,7 @@
+# 0.1.4
+
+- Added support for annotation parameters
+
 # 0.1.3
 
 - Added support for annotations

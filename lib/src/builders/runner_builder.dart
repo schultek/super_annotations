@@ -7,9 +7,9 @@ import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 import 'package:source_gen/source_gen.dart';
 
-import './code_builder_string.dart';
 import '../../super_annotations.dart';
 import '../core/utils.dart';
+import 'code_builder_string.dart';
 import 'imports_builder.dart';
 
 const classAnnotationChecker = TypeChecker.fromRuntime(ClassAnnotation);
@@ -41,13 +41,13 @@ class RunnerBuilder {
           if (meta.element is ConstructorElement) {
             var parent = (meta.element! as ConstructorElement).enclosingElement;
             if (classAnnotationChecker.isAssignableFrom(parent)) {
-              (runBuild[elem] ??= []).add(parent.name);
+              (runBuild[elem] ??= []).add(meta.toSource().substring(1));
               imports.add(parent.library.source.uri);
             }
           } else if (meta.element is PropertyAccessorElement) {
             var type = (meta.element! as PropertyAccessorElement).returnType;
             if (classAnnotationChecker.isAssignableFromType(type)) {
-              (runBuild[elem] ??= []).add(type.element!.name!);
+              (runBuild[elem] ??= []).add(meta.toSource().substring(1));
               imports.add(type.element!.library!.source.uri);
             }
           }

@@ -26,7 +26,7 @@ class MyAnnotation extends ClassAnnotation {
   /// @param library: The library that will be generated as output of the build phase
   @override
   void apply(Class clazz, LibraryBuilder library) {
-    library.body.add(Code('// - ${clazz.name}'));
+    library.body.add(Code('// - ${clazz.name}\n'));
   }
 }
 

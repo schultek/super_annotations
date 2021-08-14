@@ -1,6 +1,7 @@
-import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
+
+import '../core/utils.dart';
 
 extension ClassCodeBuilder on ClassElement {
   String builder([List<String> writes = const []]) {
@@ -18,7 +19,7 @@ extension ClassCodeBuilder on ClassElement {
         ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder()).join(',')}])" : ''}
         ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
       )
-      ${writes.map((w) => "..run((c) => $w().apply(c, l))").join("\n")};
+      ${writes.map((w) => "..run((c) => $w.apply(c, l))").join("\n")};
     """;
   }
 }
@@ -127,16 +128,6 @@ extension MethodCodeBuilder on MethodElement {
         ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
       )
     """;
-  }
-}
-
-extension ElementToNode on Element {
-  AstNode? getNode() {
-    var node =
-        (session?.getParsedLibraryByElement2(library!) as ParsedLibraryResult?)
-            ?.getElementDeclaration(this)
-            ?.node;
-    return node;
   }
 }
 

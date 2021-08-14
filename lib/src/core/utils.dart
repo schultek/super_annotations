@@ -1,3 +1,6 @@
+import 'package:analyzer/dart/analysis/results.dart';
+import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:path/path.dart';
 
@@ -9,5 +12,15 @@ extension AssetExtension on AssetId {
     }
 
     return AssetId(package, stripExtension(path) + newExtension);
+  }
+}
+
+extension ElementToNode on Element {
+  AstNode? getNode() {
+    var node =
+        (session?.getParsedLibraryByElement2(library!) as ParsedLibraryResult?)
+            ?.getElementDeclaration(this)
+            ?.node;
+    return node;
   }
 }
