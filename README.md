@@ -1,16 +1,30 @@
 # Super Annotations
 
-Use code generation with custom annotations with ease.
+Metaprogramming as you dream it. Use code generation and custom annotations with ease.
 
-- No complex builders
-- No build.yaml
-- No reflection during runtime
-
-Write your code generation functions naturally alongside your normal code.
-Define and use custom annotations in the same file or project.
+- Write your code generation functions naturally alongside your normal code.
+- Define and use custom annotations in the same file or project.
 
 For the first time, this makes code generation applicable for all kinds of projects. 
 No complex setup, no experience in writing builders needed.
+
+## Outline
+
+- [Get Started](#get-started)
+- [Generating code](#generating-code)
+  - [Generation hooks](#generation-hooks)
+  - [When it fails](#when-it-fails)
+- [Mastering Annotations](#mastering-annotations)
+  - [Annotation parameters](#annotation-parameters)
+  - [Resolved annotations](#resolved-annotations)
+- [Examples](#examples)
+  - [Json serialization](#json-serialization)
+  - [Sealed classes](#sealed-classes)
+  - [Data classes](#data-classes)
+- [How does it work?](#how-does-it-work)
+  - [Bonus: Why super?](#bonus-why-super)
+
+> This package is still in active development. If you have any feedback or feature requests, write me and issue on github.
 
 ## Get Started
 
@@ -21,7 +35,7 @@ flutter pub add super_annotations
 flutter pub add build_runner --dev
 ```
 
-Next create a new file with the `.super.dart` extension. This tells `super_annotations` to run the build step on this file.
+Next create a new file with the `.super.dart` extension. This tells `super_annotations` to run the code generation step on this file.
 Define your custom annotation like this:
 
 ```dart
@@ -34,17 +48,21 @@ class MyAnnotation extends ClassAnnotation {
 
   /// You have to implement the [apply] method, which will be
   /// executed during the build phase
-  /// @param clazz: A formal description of the annotated class, e.g. its name and fields
+  /// @param target: A formal description of the annotated class, e.g. its name and fields
   /// @param library: The library that will be generated as output of the build phase
   @override
-  void apply(Class clazz, LibraryBuilder library) {
-    // do someting with [clazz] and [library]
+  void apply(Class target, LibraryBuilder library) {
+    // Your custom implementation here
   }
 }
 ```
 
-The `clazz` parameter will hold all the information about the annotated class, and the 
+The `target` parameter will hold all the information about the annotated class, and the 
 `library` parameter can be used to produce your code generation output in a formal way.
+
+Access information about the class using `target.name`, `target.fields` and so on. 
+Add code to the generation output using: `library.body.add(...)`. 
+You can add declarations like `Class(...)`, `Extension(...)`, `Mixin(...)` etc, or use raw code with `Code(...)`.
 
 After that, use your custom annotation as you like:
 
@@ -59,24 +77,51 @@ class MyClass {
 
 Finally, run `flutter pub run build_runner build`, which will generate a `.g.dart` file alongside your `.super.dart` file.
 
-## Examples
+## Generating code
 
-We prepared a few examples, that showcase a few different things that you can do with this package.
-Some of them mimic the basic functionality of popular code-generation libraries, 
-such as [json_serializable](https://pub.dev/packages/json_serializable) and [freezed](https://pub.dev/packages/freezed). 
+This package leverages the [code_builder](https://pub.dev/packages/code_builder) package to easily specify your generation outputs, 
+whether it's classes, mixins, extensions or other code. 
+This enables you to just care about the **semantics** of your generation output, while we take care of generating 
+the correct **syntax** as well as formatting the generated code.
 
-| Name | Status |
-| --- | --- |
-| [json\_serialization_example](https://github.com/schultek/super_annotations/tree/main/examples/json_serialization_example) | **Done** |
-| [sealed\_classes_example](https://github.com/schultek/super_annotations/tree/main/examples/sealed_classes_example) | **Done** |
-| [data\_class_example](https://github.com/schultek/super_annotations/tree/main/examples/data_class_example) | **Done** |
-| [api\_generation_example](https://github.com/schultek/super_annotations/tree/main/examples/api_generation_example) | Todo |
-| [mocking\_example](https://github.com/schultek/super_annotations/tree/main/examples/mocking_example) | Todo |
+To define your generation outputs, modify the provided `LibraryBuilder` inside your annotations `apply()` method or a [generation hook](#generation-hooks).
+The most used way is to modify the library using `library.body.add()` or `library.body.addAll()`. For a list of all supported declarations, check out
+the [api reference](https://pub.dev/documentation/code_builder/latest/) of the code_builder package.
 
-## Annotation parameters and Resolved Annotations
+### Generation hooks
+
+With custom annotations, you have the possibility to generate code for each annotated class. 
+Besides this you might want to do other tasks during code-generation, such as add imports to your generated library.
+
+To do this, use **generation hooks**. These are just top-level functions, that are annotated with `@CodeGen.runBefore()` or `CodeGen.runAfter()`.
+As the names suggest, the annotated function will the be run **before** everything else, or **after** everything else.
+
+You can define multiple functions for each type of hook, but those will be executed in no particular order.
+
+### When it fails
+
+There exists a common misuse, that lead to a failure of the code generation when executing `build_runner build`.
+
+You have to make sure that the code executed during the code generation phase can be compiled. 
+Therefore it is important that the libraries that contain your annotations are syntactically correct 
+and can be compiled, otherwise code generation will fail.
+
+However it is common that your target code - the classes using your annotations - is not compilable 
+until the code generation is complete, for example when you are referring to mixins or classes that are
+later part of the generated code.
+ 
+In those cases you have to place your annotations in separate files and import them from your target code. Make sure that your dart files
+containing the annotations are compilable even when the target files are not, especially that they do not import any code with errors. 
+The builder is then smart enough to only import the needed files with the annotations.
+
+## Mastering Annotations
 
 With `super_annotations`, your build and runtime environment share the same codebase. This enables a few unique perks, 
 that you wouldn't normally get with normal code generation.
+
+### Annotation parameters
+
+Since your annotations are just a normal class, you can define fields that are then used as annotation parameters.
 
 Look at the following example:
 
@@ -85,9 +130,11 @@ Look at the following example:
 class MyClass {}
 
 class MyAnnotation extends ClassAnnotation {
+
+  const MyAnnotation(this.id, this.myValue);
+
   final String id;
   final int myValue;
-  const MyAnnotation(this.id, this.myValue);
 
   @override
   void apply(Class clazz, LibraryBuilder library) {
@@ -97,22 +144,23 @@ class MyAnnotation extends ClassAnnotation {
 ```
 
 In the `apply` method, you can now access `this.id` and `this.myValue`, which will hold the appropriate values from the actual annotation.
-When you use your annotation with different classes, the fields will always have the correct value matching the currently analyzed class.
+When you use your annotation on multiple classes, the fields will always have the correct value matching the currently analyzed class.
 
-On top of that, you can even access annotations that are not **super annotations** with ease:
+### Resolved Annotations
+
+On top of annotation parameters, you can even access non-functional annotations (that are not **super annotations**) with ease:
 
 ```dart
+@MyAnnotation()
+class MyClass {
+  @MyOtherAnnotation("important_label")
+  void doSomething() {}
+}
 
 /// Just a regular annotation, nothing 'super'
 class MyOtherAnnotation {
   final String label;
   const MyOtherAnnotation(this.label);
-}
-
-@MyAnnotation()
-class MyClass {
-  @MyOtherAnnotation("important_label")
-  void doSomething() {}
 }
 
 /// The real deal
@@ -131,6 +179,37 @@ class MyAnnotation extends ClassAnnotation {
 ```
 
 **Combine these two methods and bring your code generation game to a whole new level.**
+
+## Examples
+
+We prepared a few examples, that showcase different things that you can do with this package.
+
+### Json serialization
+
+Source: [json\_serialization_example](https://github.com/schultek/super_annotations/tree/main/examples/json_serialization_example)
+
+This example shows how to generate json serialization code, which is probably the most common use-case for code generation. 
+It is inspired by and mimics the basic behavior of [json_serializable](https://pub.dev/packages/json_serializable)
+
+### Sealed classes
+
+Source: [sealed\_classes_example](https://github.com/schultek/super_annotations/tree/main/examples/sealed_classes_example)
+
+This example shows how to generate sealed classes / union types. 
+It is inspired by and mimics the basic behavior of [freezed](https://pub.dev/packages/freezed)
+
+### Data classes
+
+Source: [data\_class_example](https://github.com/schultek/super_annotations/tree/main/examples/data_class_example)
+
+This example shows how to generate utility methods for data classes. 
+This will generate `copyWith` and `toString` methods for each annotated class.
+
+Code-Gen packages with similar functionality:
+
+- [copy_with_extension_gen](https://pub.dev/packages/copy_with_extension_gen)
+- [to_string](https://pub.dev/packages/to_string) 
+- [auto_data](https://pub.dev/packages/auto_data)  
 
 ## How does it work?
 

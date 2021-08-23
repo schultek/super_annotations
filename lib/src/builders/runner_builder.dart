@@ -42,13 +42,13 @@ class RunnerBuilder {
             var parent = (meta.element! as ConstructorElement).enclosingElement;
             if (classAnnotationChecker.isAssignableFrom(parent)) {
               (runBuild[elem] ??= []).add(meta.toSource().substring(1));
-              imports.add(parent.library.source.uri);
+              imports.add(meta.element!.library!.source.uri);
             }
           } else if (meta.element is PropertyAccessorElement) {
             var type = (meta.element! as PropertyAccessorElement).returnType;
             if (classAnnotationChecker.isAssignableFromType(type)) {
               (runBuild[elem] ??= []).add(meta.toSource().substring(1));
-              imports.add(type.element!.library!.source.uri);
+              imports.add(meta.element!.library!.source.uri);
             }
           }
         }
@@ -84,7 +84,7 @@ class RunnerBuilder {
          
           ${runAfter.map((fn) => '$fn(l);\n').join()}
         });
-        port.send(library.accept(DartEmitter.scoped()).toString());
+        port.send(library.accept(DartEmitter.scoped(useNullSafetySyntax: true)).toString());
       }
     """;
 
@@ -97,7 +97,17 @@ class RunnerBuilder {
 
     var resultFuture = dataPort.first;
 
-    await Isolate.spawnUri(runnerId.uri, [], dataPort.sendPort);
+    try {
+      await Isolate.spawnUri(runnerId.uri, [], dataPort.sendPort);
+    } on IsolateSpawnException catch (e) {
+      var m = 'Unable to spawn isolate: ';
+      if (e.message.startsWith(m)) {
+        var message = e.message.substring(m.length);
+        throw RunnerException(message);
+      } else {
+        rethrow;
+      }
+    }
 
     return await resultFuture as String;
   }
@@ -113,5 +123,15 @@ class RunnerBuilder {
       await cleanup();
     }
     return result;
+  }
+}
+
+class RunnerException implements Exception {
+  String message;
+  RunnerException(this.message);
+
+  @override
+  String toString() {
+    return 'Cannot run code generation. There probably is a error in your annotation code. See the output below for more details:\n\n$message';
   }
 }

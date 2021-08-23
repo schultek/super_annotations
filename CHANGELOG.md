@@ -1,3 +1,8 @@
+# 0.1.6
+
+- Improved documentation
+- Added support for generic type arguments
+
 # 0.1.5
 
 - Added support for resolved annotations and values

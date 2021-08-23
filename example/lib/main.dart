@@ -25,8 +25,10 @@ class MyAnnotation extends ClassAnnotation {
   /// @param clazz: A formal description of the annotated class, e.g. its name and fields
   /// @param library: The library that will be generated as output of the build phase
   @override
-  void apply(Class clazz, LibraryBuilder library) {
-    library.body.add(Code('// - ${clazz.name}\n'));
+  void apply(Class target, LibraryBuilder library) {
+    /// You can add any declaration or code here
+    /// like classes, extensions, mixins, etc.
+    library.body.add(Code('// - ${target.name}\n'));
   }
 }
 

@@ -9,13 +9,15 @@ extension ClassCodeBuilder on ClassElement {
 
     var mixins = node?.withClause?.mixinTypes.map((t) => t.name.name) ?? [];
     var annotations = node?.metadata ?? <Annotation>[];
+    var types = node?.typeParameters?.typeParameters ?? <TypeParameter>[];
 
     return """
       Class((c) => c
-        ..name = '$name'
+        ..name = '${name.escaped}'
         ${node?.isAbstract == true ? '..abstract = true' : ''}
-        ${node?.extendsClause != null ? "..extend = refer('${node!.extendsClause!.superclass.toSource()}')" : ''}
-        ${node?.implementsClause != null ? "..implements.addAll([${node!.implementsClause!.interfaces.map((t) => "refer('${t.toSource()}')").join(', ')}])" : ''}
+        ${node?.extendsClause != null ? "..extend = refer('${node!.extendsClause!.superclass.toSource().escaped}')" : ''}
+        ${types.isNotEmpty ? "..types.addAll([${types.map((t) => t.builder()).join(',')}])" : ''}
+        ${node?.implementsClause != null ? "..implements.addAll([${node!.implementsClause!.interfaces.map((t) => "refer('${t.toSource().escaped}')").join(', ')}])" : ''}
         ${fields.isNotEmpty ? "..fields.addAll([${fields.map((f) => f.builder()).join(',')}])" : ''}
         ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder()).join(',')}])" : ''}
         ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => "refer('${m.escaped}')").join(',')}])" : ''}
@@ -35,12 +37,23 @@ extension FieldCodeBuilder on FieldElement {
 
     return """
       Field((f) => f
-        ..name = '$name'
-        ..type = refer('${type.getDisplayString(withNullability: true)}')
+        ..name = '${name.escaped}'
+        ..type = refer('${type.getDisplayString(withNullability: true).escaped}')
         ..modifier = FieldModifier.${isFinal ? 'final\$' : isConst ? 'constant' : 'var\$'}
         ..static = $isStatic
         ..late = $isLate
         ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
+      )
+    """;
+  }
+}
+
+extension TypeParameterBuilder on TypeParameter {
+  String builder() {
+    return """
+      TypeReference((t) => t
+        ..symbol = '${name.name.escaped}'
+        ${bound != null ? "..bound = refer('${bound?.toSource().escaped}')" : ''}
       )
     """;
   }
@@ -69,12 +82,12 @@ extension ConstructorCodeBuilder on ConstructorElement {
 
     return """
       Constructor((c) => c
-        ${name.isNotEmpty ? "..name = '$name'" : ""}
+        ${name.isNotEmpty ? "..name = '${name.escaped}'" : ""}
         ..factory = $isFactory
         ..constant = $isConst
         ${reqParams.isNotEmpty ? '..requiredParameters.addAll([${reqParams.join()}])' : ''}
         ${optParams.isNotEmpty ? '..optionalParameters.addAll([${optParams.join()}])' : ''}
-        ${node?.redirectedConstructor != null ? "..redirect = refer('${node!.redirectedConstructor!.toString()}')" : ''}
+        ${node?.redirectedConstructor != null ? "..redirect = refer('${node!.redirectedConstructor!.toString().escaped}')" : ''}
         ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
       )
     """;
@@ -90,8 +103,8 @@ extension ParameterCodeBuilder on ParameterElement {
 
     return """
       Parameter((p) => p
-        ..name = '$name'
-        ..type = refer('${type.getDisplayString(withNullability: true)}')
+        ..name = '${name.escaped}'
+        ..type = refer('${type.getDisplayString(withNullability: true).escaped}')
         ..toThis = $isFieldFormal
         ..named = $isNamed
         ..required = ${isNamed && isNotOptional}
@@ -108,8 +121,8 @@ extension MethodCodeBuilder on MethodElement {
     var annotations = node?.metadata ?? <Annotation>[];
     return """
       Method((m) => m
-        ..name = '$name'
-        ..returns = refer('${returnType.getDisplayString(withNullability: true)}')
+        ..name = '${name.escaped}'
+        ..returns = refer('${returnType.getDisplayString(withNullability: true).escaped}')
         ..requiredParameters.addAll([${parameters.where((p) => p.isRequiredPositional).map((p) => p.builder()).join()}])
         ..optionalParameters.addAll([${parameters.where((p) => !p.isRequiredPositional).map((p) => p.builder()).join()}])
         ..static = $isStatic
