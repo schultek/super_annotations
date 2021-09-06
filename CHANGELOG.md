@@ -1,3 +1,7 @@
+# 0.2.0
+
+- Updated license
+
 # 0.1.6
 
 - Improved documentation
