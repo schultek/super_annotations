@@ -1,3 +1,7 @@
+# 0.2.1
+
+- Extended type builders
+
 # 0.2.0
 
 - Updated license
