@@ -9,20 +9,18 @@ import '../core/utils.dart';
 extension ClassCodeBuilder on ClassElement {
   String builder([List<String> writes = const []]) {
     var node = getNode() as ClassDeclaration?;
-
-    var mixins = node?.withClause?.mixinTypes.map((t) => t.name.name) ?? [];
     var annotations = node?.metadata ?? <Annotation>[];
 
     return """
       Class((c) => c
         ..name = '${name.escaped}'
         ${node?.isAbstract == true ? '..abstract = true' : ''}
-        ${node?.extendsClause != null ? "..extend = ${node!.extendsClause!.superclass.builder()}" : ''}
+        ${supertype != null ? "..extend = ${supertype!.builder()}" : ''}
         ${typeParameters.isNotEmpty ? "..types.addAll([${typeParameters.map((t) => t.builder()).join(',')}])" : ''}
-        ${node?.implementsClause != null ? "..implements.addAll([${node!.implementsClause!.interfaces.map((t) => t.builder()).join(', ')}])" : ''}
+        ${interfaces.isNotEmpty ? "..implements.addAll([${interfaces.map((t) => t.builder()).join(', ')}])" : ''}
         ${fields.isNotEmpty ? "..fields.addAll([${fields.map((f) => f.builder()).join(',')}])" : ''}
         ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder()).join(',')}])" : ''}
-        ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => "refer('${m.escaped}')").join(',')}])" : ''}
+        ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => m.builder()).join(',')}])" : ''}
         ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder()).join(',')}])" : ''}
         ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
       )
@@ -117,23 +115,6 @@ extension MethodCodeBuilder on MethodElement {
   }
 }
 
-extension TypeParameterBuilder on TypeParameter {
-  String builder() {
-    return """
-      TypeReference((t) => t
-        ..symbol = '${name.name.escaped}'
-        ${bound != null ? "..bound = ${bound!.builder()}" : ''}
-      )
-    """;
-  }
-}
-
-extension TypeAnnotationBuilder on TypeAnnotation {
-  String builder() {
-    return type?.builder() ?? "refer('${toSource().escaped}')";
-  }
-}
-
 extension AnnotationCodeBuilder on Annotation {
   String builder() {
     return "ResolvedAnnotation(${toSource().substring(1)}, '${toSource().escaped}')";
@@ -207,12 +188,6 @@ class DartTypeVisitor extends TypeVisitor<String> {
   @override
   String visitVoidType(VoidType type) {
     return "refer('void')";
-  }
-}
-
-extension TypeNameCodeBuilder on TypeName {
-  String builder() {
-    return "refer('${toSource().escaped}')";
   }
 }
 
