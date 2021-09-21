@@ -1,3 +1,8 @@
+# 0.3.0
+
+- Use library annotation instead of file extension to indicate targets
+- Improve examples and documentation
+
 # 0.2.1
 
 - Extended type builders

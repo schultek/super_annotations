@@ -1,4 +1,4 @@
-part of 'freezed.super.dart';
+part of 'main.dart';
 
 mixin _$Union {
   TResult map<TResult>(

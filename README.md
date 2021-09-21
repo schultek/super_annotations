@@ -1,6 +1,6 @@
 # Super Annotations
 
-Metaprogramming as you dream it. Use code generation and custom annotations with ease.
+Hassle free metaprogramming as you dream it. Use code generation and custom annotations with ease.
 
 - Write your code generation functions naturally alongside your normal code.
 - Define and use custom annotations in the same file or project.
@@ -35,8 +35,7 @@ flutter pub add super_annotations
 flutter pub add build_runner --dev
 ```
 
-Next create a new file with the `.super.dart` extension. This tells `super_annotations` to run the code generation step on this file.
-Define your custom annotation like this:
+Next, define your custom annotation like this:
 
 ```dart
 import 'package:super_annotations/super_annotations.dart';
@@ -64,7 +63,15 @@ Access information about the class using `target.name`, `target.fields` and so o
 Add code to the generation output using: `library.body.add(...)`. 
 You can add declarations like `Class(...)`, `Extension(...)`, `Mixin(...)` etc, or use raw code with `Code(...)`.
 
-After that, use your custom annotation as you like:
+Finally annotate the library directive with `@CodeGen()` for each library that you want to activate code generation for.
+A new `.g.dart` file will be generated alongside each of the annotated libraries.
+
+```dart
+@CodeGen()
+library main;
+```
+
+After that, use your custom annotation in your library, or any of it's imported libraries, as you like:
 
 ```dart
 @MyAnnotation()
@@ -75,7 +82,7 @@ class MyClass {
 }
 ```
 
-Finally, run `flutter pub run build_runner build`, which will generate a `.g.dart` file alongside your `.super.dart` file.
+Finally, run `flutter pub run build_runner build` to run code generation once or `flutter pub run build_runner watch` to automatically rebuild on each save.
 
 ## Generating code
 
@@ -93,10 +100,17 @@ the [api reference](https://pub.dev/documentation/code_builder/latest/) of the c
 With custom annotations, you have the possibility to generate code for each annotated class. 
 Besides this you might want to do other tasks during code-generation, such as add imports to your generated library.
 
-To do this, use **generation hooks**. These are just top-level functions, that are annotated with `@CodeGen.runBefore()` or `CodeGen.runAfter()`.
-As the names suggest, the annotated function will the be run **before** everything else, or **after** everything else.
+To do this, use **generation hooks**. These are just top-level or static functions, which are passed to the `@CodeGen()` annotation:
 
-You can define multiple functions for each type of hook, but those will be executed in no particular order.
+```dart
+@CodeGen(
+  runBefore: [myFunction],
+  runAfter: [myOtherFunction],
+)
+library main;
+```
+
+As the names suggest, the annotated function will the be run **before** everything else, or **after** everything else.
 
 ### When it fails
 
@@ -184,19 +198,24 @@ class MyAnnotation extends ClassAnnotation {
 
 We prepared a few examples, that showcase different things that you can do with this package.
 
+### Part-of strategy
+
+Source: [part\_of_strategy](https://github.com/schultek/super_annotations/tree/main/examples/part_of_strategy)
+
+This example demonstrates a strategy using part_of directives in order to extend existing declarations or add new ones.
+
+### Inherit strategy
+
+Source: [inherit\_strategy](https://github.com/schultek/super_annotations/tree/main/examples/inherit_strategy)
+
+This example demonstrates a strategy using inheritance in order to modify existing class declarations.
+
 ### Json serialization
 
 Source: [json\_serialization_example](https://github.com/schultek/super_annotations/tree/main/examples/json_serialization_example)
 
 This example shows how to generate json serialization code, which is probably the most common use-case for code generation. 
 It is inspired by and mimics the basic behavior of [json_serializable](https://pub.dev/packages/json_serializable)
-
-### Sealed classes
-
-Source: [sealed\_classes_example](https://github.com/schultek/super_annotations/tree/main/examples/sealed_classes_example)
-
-This example shows how to generate sealed classes / union types. 
-It is inspired by and mimics the basic behavior of [freezed](https://pub.dev/packages/freezed)
 
 ### Data classes
 
@@ -205,22 +224,25 @@ Source: [data\_class_example](https://github.com/schultek/super_annotations/tree
 This example shows how to generate utility methods for data classes. 
 This will generate `copyWith` and `toString` methods for each annotated class.
 
-Code-Gen packages with similar functionality:
+### Sealed classes
 
-- [copy_with_extension_gen](https://pub.dev/packages/copy_with_extension_gen)
-- [to_string](https://pub.dev/packages/to_string) 
-- [auto_data](https://pub.dev/packages/auto_data)  
+Source: [sealed\_classes_example](https://github.com/schultek/super_annotations/tree/main/examples/sealed_classes_example)
+
+This example shows how to generate sealed classes / union types. 
+It is inspired by and mimics the basic behavior of [freezed](https://pub.dev/packages/freezed)
+
 
 ## How does it work?
 
 I plan to publish a detailed article on the inner workings of this package, but here is a short rundown:
 
-1. The package defines a builder that automatically runs on all `*.super.dart` files
+1. The package defines a builder that automatically runs on all libraries annotated with `@CodeGen()`
 2. It identifies custom annotations and analyzes the annotated classes
 3. It produces a new `*.runner.g.dart` file, that:
-   - contains the analyzed classes
+   - contains the analyzed classes using the `code_builder` syntax
    - calls the custom annotations `write` methods
    - calls additional `runBefore` or `runAfter` methods
+   - builds and returns the created library code
 4. It spawns the runner as a new isolate and receives the generation results via inter-process communication
 5. It kills the isolate and deletes the `*.runner.g.dart` file
 6. It writes the generation results to a `*.g.dart` file as the build output

@@ -1,4 +1,4 @@
-part of 'models.super.dart';
+part of 'main.dart';
 
 mixin _$Person {
   String get name;

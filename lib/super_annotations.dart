@@ -20,18 +20,25 @@ abstract class ClassAnnotation {
   void apply(Class target, LibraryBuilder library) {}
 }
 
+typedef CodeGenHook = void Function(LibraryBuilder);
+
 class CodeGen {
   /// Contains the path to the current source file for the build
   static String currentFile = '';
 
-  //ignore: unused_element
-  CodeGen._();
+  /// Functions to be run at the beginning of the build phase,
+  /// before any annotation
+  final List<CodeGenHook> runBefore;
 
-  /// Use to annotate a function to be run at the beginning of the build phase
-  const CodeGen.runBefore();
+  /// Functions to be run at the end of the build phase,
+  /// after every annotation
+  final List<CodeGenHook> runAfter;
 
-  /// Use to annotate a function to be run at the end of the build phase
-  const CodeGen.runAfter();
+  const CodeGen({this.runBefore = const [], this.runAfter = const []});
+
+  static void addPartOfDirective(LibraryBuilder library) {
+    library.directives.add(Directive.partOf(CodeGen.currentFile));
+  }
 }
 
 extension Cascade<T> on T {

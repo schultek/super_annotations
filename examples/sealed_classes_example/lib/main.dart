@@ -1,4 +1,18 @@
-import 'models/freezed.super.dart';
+@CodeGen(runAfter: [CodeGen.addPartOfDirective])
+library main;
+
+import 'package:super_annotations/super_annotations.dart';
+
+import 'freezed.dart';
+
+part 'main.g.dart';
+
+@freezed
+class Union with _$Union {
+  const factory Union(int value) = Data;
+  const factory Union.loading() = Loading;
+  const factory Union.error([String? message]) = ErrorDetails;
+}
 
 void main() {
   var data = Union(42);

@@ -1,10 +1,9 @@
+import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/dart/element/type_visitor.dart';
-
-import '../core/utils.dart';
 
 extension ClassCodeBuilder on ClassElement {
   String builder([List<String> writes = const []]) {
@@ -193,4 +192,14 @@ class DartTypeVisitor extends TypeVisitor<String> {
 
 extension StringEscaped on String {
   String get escaped => replaceAll('\$', '\\\$').replaceAll("'", "\\'");
+}
+
+extension ElementToNode on Element {
+  AstNode? getNode() {
+    var node =
+        (session?.getParsedLibraryByElement(library!) as ParsedLibraryResult?)
+            ?.getElementDeclaration(this)
+            ?.node;
+    return node;
+  }
 }

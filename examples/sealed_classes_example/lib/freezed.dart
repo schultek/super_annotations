@@ -1,10 +1,5 @@
 import 'package:super_annotations/super_annotations.dart';
 
-@CodeGen.runAfter()
-void addPartOfDirective(LibraryBuilder l) {
-  l.directives.add(Directive.partOf(CodeGen.currentFile));
-}
-
 const freezed = Freezed();
 
 class Freezed extends ClassAnnotation {
@@ -30,7 +25,7 @@ class Freezed extends ClassAnnotation {
       ]));
 
     var mc = Mixin((m) => m
-      ..name = c.mixins.first.symbol
+      ..name = '_\$${c.name}'
       ..methods.addAll([
         mapMethod.rebuild((m) =>
             m.body = refer('UnimplementedError').newInstance([]).thrown.code),

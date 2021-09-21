@@ -1,10 +1,5 @@
 import 'package:super_annotations/super_annotations.dart';
 
-@CodeGen.runBefore()
-void addImport(LibraryBuilder library) {
-  library.directives.add(Directive.partOf(CodeGen.currentFile));
-}
-
 class DataClass extends ClassAnnotation {
   const DataClass();
 
@@ -20,7 +15,7 @@ class DataClass extends ClassAnnotation {
             ..required = false
             ..toThis = false
             ..defaultTo = null
-            ..type = refer(p.type!.symbol! + '?'))
+            ..type = refer('${p.type!.symbol!}?'))
       ])
       ..body = c.constructors.first
           .invokeWith(

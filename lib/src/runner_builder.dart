@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 import 'package:source_gen/source_gen.dart';
 
-import '../../super_annotations.dart';
-import '../core/utils.dart';
+import '../super_annotations.dart';
 import 'code_builder_string.dart';
 import 'imports_builder.dart';
 
@@ -17,15 +17,16 @@ const codeGenChecker = TypeChecker.fromRuntime(CodeGen);
 
 class RunnerBuilder {
   final BuildStep buildStep;
+  final DartObject annotation;
   final Map<String, dynamic> config;
 
   final AssetId runnerId;
-  RunnerBuilder(this.buildStep, this.config)
-      : runnerId = buildStep.inputId.changeExtensionFull('.runner.g.dart');
+  RunnerBuilder(this.buildStep, this.annotation, this.config)
+      : runnerId = buildStep.inputId.changeExtension('.runner.g.dart');
 
   Future<void> create() async {
     Map<ClassElement, List<String>> runBuild = {};
-    List<String> runBefore = [], runAfter = [];
+
     var imports = ImportsBuilder(buildStep.inputId)
       ..add(Uri.parse('dart:isolate'))
       ..add(Uri.parse('package:super_annotations/super_annotations.dart'));
@@ -34,7 +35,6 @@ class RunnerBuilder {
       if (library.isInSdk) continue;
 
       var classes = library.units.expand((u) => u.classes).toList();
-      var functions = library.units.expand((u) => u.functions).toList();
 
       for (var elem in classes) {
         for (var meta in elem.metadata) {
@@ -53,24 +53,10 @@ class RunnerBuilder {
           }
         }
       }
-
-      for (var elem in functions) {
-        for (var meta in elem.metadata) {
-          if (meta.element is ConstructorElement) {
-            var parent = (meta.element! as ConstructorElement).enclosingElement;
-            if (codeGenChecker.isExactly(parent)) {
-              if (meta.element!.name == 'runBefore') {
-                runBefore.add(elem.name);
-                imports.add(elem.library.source.uri);
-              } else if (meta.element!.name == 'runAfter') {
-                runAfter.add(elem.name);
-                imports.add(elem.library.source.uri);
-              }
-            }
-          }
-        }
-      }
     }
+
+    var runAfter = getHooks(annotation.getField('runAfter'), imports);
+    var runBefore = getHooks(annotation.getField('runBefore'), imports);
 
     var runnerCode = """
       ${imports.write()}
@@ -90,6 +76,23 @@ class RunnerBuilder {
 
     await File(runnerId.path).writeAsString(
         DartFormatter(fixes: [StyleFix.docComments]).format(runnerCode));
+  }
+
+  Iterable<String> getHooks(DartObject? object, ImportsBuilder imports) {
+    if (object == null) return [];
+    var hooks = <String>[];
+    for (var o in object.toListValue() ?? <DartObject>[]) {
+      var fn = o.toFunctionValue();
+      if (fn != null) {
+        if (fn.isStatic && fn.enclosingElement is ClassElement) {
+          hooks.add('${fn.enclosingElement.name}.${fn.name}');
+        } else {
+          hooks.add(fn.name);
+        }
+        imports.add(fn.library.source.uri);
+      }
+    }
+    return hooks;
   }
 
   Future<String> execute() async {

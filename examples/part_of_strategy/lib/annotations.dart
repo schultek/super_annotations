@@ -8,6 +8,6 @@ class MyAnnotation extends ClassAnnotation {
       ..name = '_\$${target.name}'
       ..methods.add(Method((m) => m
         ..name = 'hello'
-        ..body = Code("print('World');")))))
+        ..body = Code("print('World');")))));
   }
 }

@@ -2,6 +2,6 @@ builders:
   super_annotations:
     import: "package:super_annotations/builder.dart"
     builder_factories: [ "buildSuperGeneration" ]
-    build_extensions: { ".super.dart": [ ".g.dart" ] }
+    build_extensions: { ".dart": [ ".g.dart" ] }
     auto_apply: dependents
     build_to: source
