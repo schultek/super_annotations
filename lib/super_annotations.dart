@@ -14,10 +14,10 @@ abstract class ClassAnnotation {
 
   /// Overwrite to modify the annotated class before being passed
   /// to the [apply] method of any annotation
-  void modify(ClassBuilder builder, Library library) {}
+  void modify(ClassBuilder builder) {}
 
   /// Receive the annotated class as target and modify the output library
-  void apply(Class target, LibraryBuilder library) {}
+  void apply(Class target, LibraryBuilder library);
 }
 
 typedef CodeGenHook = void Function(LibraryBuilder);

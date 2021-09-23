@@ -58,6 +58,9 @@ class RunnerBuilder {
     var runAfter = getHooks(annotation.getField('runAfter'), imports);
     var runBefore = getHooks(annotation.getField('runBefore'), imports);
 
+    var runAnnotations =
+        runBuild.entries.map((e) => e.key.builder(imports, e.value)).toList();
+
     var runnerCode = """
       ${imports.write()}
       
@@ -65,9 +68,7 @@ class RunnerBuilder {
         CodeGen.currentFile = '${path.basename(buildStep.inputId.path)}';
         var library = Library((l) {
           ${runBefore.map((fn) => '$fn(l);\n').join()}
-          
-          ${runBuild.entries.map((e) => e.key.builder(e.value)).join('\n')}
-         
+          ${runAnnotations.join('\n')}
           ${runAfter.map((fn) => '$fn(l);\n').join()}
         });
         port.send(library.accept(DartEmitter.scoped(useNullSafetySyntax: true)).toString());

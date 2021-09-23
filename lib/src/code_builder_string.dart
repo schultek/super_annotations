@@ -5,23 +5,23 @@ import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/dart/element/type_visitor.dart';
 
-extension ClassCodeBuilder on ClassElement {
-  String builder([List<String> writes = const []]) {
-    var node = getNode() as ClassDeclaration?;
-    var annotations = node?.metadata ?? <Annotation>[];
+import 'imports_builder.dart';
 
+extension ClassCodeBuilder on ClassElement {
+  String builder(ImportsBuilder imports, [List<String> writes = const []]) {
     return """
       Class((c) => c
         ..name = '${name.escaped}'
-        ${node?.isAbstract == true ? '..abstract = true' : ''}
+        ${isAbstract ? '..abstract = true' : ''}
         ${supertype != null ? "..extend = ${supertype!.builder()}" : ''}
         ${typeParameters.isNotEmpty ? "..types.addAll([${typeParameters.map((t) => t.builder()).join(',')}])" : ''}
         ${interfaces.isNotEmpty ? "..implements.addAll([${interfaces.map((t) => t.builder()).join(', ')}])" : ''}
-        ${fields.isNotEmpty ? "..fields.addAll([${fields.map((f) => f.builder()).join(',')}])" : ''}
-        ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder()).join(',')}])" : ''}
+        ${fields.isNotEmpty ? "..fields.addAll([${fields.map((f) => f.builder(imports)).join(',')}])" : ''}
+        ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder(imports)).join(',')}])" : ''}
         ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => m.builder()).join(',')}])" : ''}
-        ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder()).join(',')}])" : ''}
-        ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
+        ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder(imports)).join(',')}])" : ''}
+        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
+        ${writes.map((w) => "..run((c) => $w.modify(c))").join("\n")}
       )
       ${writes.map((w) => "..run((c) => $w.apply(c, l))").join("\n")};
     """;
@@ -29,11 +29,7 @@ extension ClassCodeBuilder on ClassElement {
 }
 
 extension FieldCodeBuilder on FieldElement {
-  String builder() {
-    var varNode = getNode() as VariableDeclaration?;
-    var node = varNode?.parent?.parent as FieldDeclaration?;
-    var annotations = node?.metadata ?? <Annotation>[];
-
+  String builder(ImportsBuilder imports) {
     return """
       Field((f) => f
         ..name = '${name.escaped}'
@@ -41,24 +37,22 @@ extension FieldCodeBuilder on FieldElement {
         ..modifier = FieldModifier.${isFinal ? 'final\$' : isConst ? 'constant' : 'var\$'}
         ..static = $isStatic
         ..late = $isLate
-        ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
+        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
       )
     """;
   }
 }
 
 extension ConstructorCodeBuilder on ConstructorElement {
-  String builder() {
+  String builder(ImportsBuilder imports) {
     List<String> reqParams = [], optParams = [];
 
     var node = getNode() as ConstructorDeclaration?;
-    var annotations = node?.metadata ?? <Annotation>[];
-
     for (var p in parameters) {
       if (p.isOptional || p.isNamed) {
-        optParams.add(p.builder());
+        optParams.add(p.builder(imports));
       } else {
-        reqParams.add(p.builder());
+        reqParams.add(p.builder(imports));
       }
     }
 
@@ -70,19 +64,15 @@ extension ConstructorCodeBuilder on ConstructorElement {
         ${reqParams.isNotEmpty ? '..requiredParameters.addAll([${reqParams.join()}])' : ''}
         ${optParams.isNotEmpty ? '..optionalParameters.addAll([${optParams.join()}])' : ''}
         ${node?.redirectedConstructor != null ? "..redirect = refer('${node!.redirectedConstructor!.toString().escaped}')" : ''}
-        ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
+        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
       )
     """;
   }
 }
 
 extension ParameterCodeBuilder on ParameterElement {
-  String builder() {
+  String builder(ImportsBuilder imports) {
     var isFieldFormal = this is FieldFormalParameterElement;
-
-    var node = getNode() as FormalParameter?;
-    var annotations = node?.metadata ?? <Annotation>[];
-
     return """
       Parameter((p) => p
         ..name = '${name.escaped}'
@@ -91,31 +81,32 @@ extension ParameterCodeBuilder on ParameterElement {
         ..named = $isNamed
         ..required = ${isNamed && isNotOptional}
         ..defaultTo = ${hasDefaultValue ? "ResolvedValue($defaultValueCode, '${defaultValueCode!.escaped}')" : null}
-        ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
+        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
       ),
     """;
   }
 }
 
 extension MethodCodeBuilder on MethodElement {
-  String builder() {
-    var node = getNode() as MethodDeclaration?;
-    var annotations = node?.metadata ?? <Annotation>[];
+  String builder(ImportsBuilder imports) {
     return """
       Method((m) => m
         ..name = '${name.escaped}'
         ..returns = ${returnType.builder()}
-        ..requiredParameters.addAll([${parameters.where((p) => p.isRequiredPositional).map((p) => p.builder()).join()}])
-        ..optionalParameters.addAll([${parameters.where((p) => !p.isRequiredPositional).map((p) => p.builder()).join()}])
+        ..requiredParameters.addAll([${parameters.where((p) => p.isRequiredPositional).map((p) => p.builder(imports)).join()}])
+        ..optionalParameters.addAll([${parameters.where((p) => !p.isRequiredPositional).map((p) => p.builder(imports)).join()}])
         ..static = $isStatic
-        ${annotations.isNotEmpty ? '..annotations.addAll([${annotations.map((m) => m.builder()).join(',')}])' : ''}
+        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
       )
     """;
   }
 }
 
-extension AnnotationCodeBuilder on Annotation {
-  String builder() {
+extension AnnotationCodeBuilder on ElementAnnotation {
+  String builder(ImportsBuilder imports) {
+    if (element?.library != null) {
+      imports.add(element!.library!.source.uri);
+    }
     return "ResolvedAnnotation(${toSource().substring(1)}, '${toSource().escaped}')";
   }
 }
@@ -197,7 +188,7 @@ extension StringEscaped on String {
 extension ElementToNode on Element {
   AstNode? getNode() {
     var node =
-        (session?.getParsedLibraryByElement(library!) as ParsedLibraryResult?)
+        (session?.getParsedLibraryByElement2(library!) as ParsedLibraryResult?)
             ?.getElementDeclaration(this)
             ?.node;
     return node;

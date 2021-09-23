@@ -1,6 +1,6 @@
 # Super Annotations
 
-Hassle free metaprogramming as you dream it. Use code generation and custom annotations with ease.
+Hassle-free static metaprogramming as you dream it. Use code generation and custom annotations with ease.
 
 - Write your code generation functions naturally alongside your normal code.
 - Define and use custom annotations in the same file or project.
@@ -8,19 +8,26 @@ Hassle free metaprogramming as you dream it. Use code generation and custom anno
 For the first time, this makes code generation applicable for all kinds of projects. 
 No complex setup, no experience in writing builders needed.
 
+> While this package is fully functional, it should be considered more of a concept piece for now on how to to static metaprogramming in dart.
+> Some parts took inspiration from [this github discussion](https://github.com/dart-lang/language/issues/1482).
+
 ## Outline
 
 - [Get Started](#get-started)
 - [Generating code](#generating-code)
   - [Generation hooks](#generation-hooks)
   - [When it fails](#when-it-fails)
+  - [Debugging](#debugging)
 - [Mastering Annotations](#mastering-annotations)
   - [Annotation parameters](#annotation-parameters)
   - [Resolved annotations](#resolved-annotations)
 - [Examples](#examples)
+  - [Part-of strategy](#part-of-strategy)
+  - [Inherit strategy](#inherit-strategy)
   - [Json serialization](#json-serialization)
   - [Sealed classes](#sealed-classes)
   - [Data classes](#data-classes)
+  - [Resolved annotations](#resolved-annotations-example)
 - [How does it work?](#how-does-it-work)
   - [Bonus: Why super?](#bonus-why-super)
 
@@ -31,9 +38,11 @@ No complex setup, no experience in writing builders needed.
 First, add `super_annotations` as a dependency, and `build_runner` as a dev_dependency.
 
 ```shell script
-flutter pub add super_annotations
-flutter pub add build_runner --dev
+pub add super_annotations
+pub add build_runner --dev
 ```
+
+> For every `pub` command prefix it with either `dart` or `flutter` depending on your project.
 
 Next, define your custom annotation like this:
 
@@ -61,7 +70,7 @@ The `target` parameter will hold all the information about the annotated class, 
 
 Access information about the class using `target.name`, `target.fields` and so on. 
 Add code to the generation output using: `library.body.add(...)`. 
-You can add declarations like `Class(...)`, `Extension(...)`, `Mixin(...)` etc, or use raw code with `Code(...)`.
+You can add declarations like `Class(...)`, `Extension(...)`, `Mixin(...)` etc, or use raw strings with `Code('...')`.
 
 Finally annotate the library directive with `@CodeGen()` for each library that you want to activate code generation for.
 A new `.g.dart` file will be generated alongside each of the annotated libraries.
@@ -82,7 +91,9 @@ class MyClass {
 }
 ```
 
-Finally, run `flutter pub run build_runner build` to run code generation once or `flutter pub run build_runner watch` to automatically rebuild on each save.
+Finally, run `pub run build_runner build` to run code generation once or `pub run build_runner watch` to automatically rebuild on each save.
+
+> Head over to the example to view the full code
 
 ## Generating code
 
@@ -128,6 +139,20 @@ In those cases you have to place your annotations in separate files and import t
 containing the annotations are compilable even when the target files are not, especially that they do not import any code with errors. 
 The builder is then smart enough to only import the needed files with the annotations.
 
+### Debugging
+
+> Steps for Android Studio / IntelliJ IDEA
+
+Since we use `build_runner` to execute our annotation code, it is not straight forward to debug our code.
+To enable debugging, you need to manually add the script that `pub run build_runner build` calls to your run configurations.
+This script is inside the `.dart_tool` folder at the root of your project. 
+In your IDE add a new run configuration for a dart command line app with the following values:
+
+- Dart file: <project_root>/.dart_tool/build/entrypoint/build.dart
+- Program arguments: build --delete-conflicting-outputs
+
+Now you can set breakpoints in your annotations and debug them by selecting the created run config and clicking the `Debug` button.
+
 ## Mastering Annotations
 
 With `super_annotations`, your build and runtime environment share the same codebase. This enables a few unique perks, 
@@ -151,7 +176,7 @@ class MyAnnotation extends ClassAnnotation {
   final int myValue;
 
   @override
-  void apply(Class clazz, LibraryBuilder library) {
+  void apply(Class target, LibraryBuilder library) {
     // read on
   }
 }
@@ -182,9 +207,9 @@ class MyAnnotation extends ClassAnnotation {
   const MyAnnotation();
 
   @override
-  void apply(Class clazz, LibraryBuilder library) {
+  void apply(Class target, LibraryBuilder library) {
     // use [resolvedAnnotations] on any element (e.g. method) to get the actual annotation objects
-    var methodAnnotation = clazz.methods.first.resolvedAnnotations.first;
+    var methodAnnotation = target.methods.first.resolvedAnnotations.first;
     if (methodAnnotation is MyOtherAnnotation) { // yes
       // do something with [methodAnnotation.label]
     }
@@ -231,6 +256,11 @@ Source: [sealed\_classes_example](https://github.com/schultek/super_annotations/
 This example shows how to generate sealed classes / union types. 
 It is inspired by and mimics the basic behavior of [freezed](https://pub.dev/packages/freezed)
 
+### Resolved annotations example
+
+Source: [resolved\_annotations_example](https://github.com/schultek/super_annotations/tree/main/examples/resolved_annotations_example)
+
+This example demonstrates how to use [resolved annotations](#resolved-annotations).
 
 ## How does it work?
 

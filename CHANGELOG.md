@@ -1,3 +1,8 @@
+# 0.3.1
+
+- Fix missing annotation imports
+- Add resolved annotations example
+
 # 0.3.0
 
 - Use library annotation instead of file extension to indicate targets
