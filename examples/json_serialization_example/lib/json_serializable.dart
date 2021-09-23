@@ -4,16 +4,16 @@ class JsonSerializable extends ClassAnnotation {
   const JsonSerializable();
 
   @override
-  void apply(Class c, LibraryBuilder l) {
+  void apply(Class target, LibraryBuilder output) {
     var fromJson = Method((m) => m
-      ..name = '_\$${c.name}FromJson'
+      ..name = '_\$${target.name}FromJson'
       ..requiredParameters.add(Parameter((p) => p
         ..name = 'map'
         ..type = refer('Map<String, dynamic>')))
-      ..returns = refer(c.name)
-      ..body = c.constructors.first
+      ..returns = refer(target.name)
+      ..body = target.constructors.first
           .invokeWith(
-              c.name,
+              target.name,
               (p) => refer('map')
                   .index(literalString(p.name))
                   .asA(p.type!.expression))
@@ -21,16 +21,16 @@ class JsonSerializable extends ClassAnnotation {
           .statement);
 
     var toJson = Method((m) => m
-      ..name = '_\$${c.name}ToJson'
+      ..name = '_\$${target.name}ToJson'
       ..requiredParameters.add(Parameter((p) => p
         ..name = 'v'
-        ..type = refer(c.name)))
+        ..type = refer(target.name)))
       ..returns = refer('Map<String, dynamic>')
       ..body = literalMap({
-        for (var f in c.fields)
+        for (var f in target.fields)
           literalString(f.name): refer('v').property(f.name),
       }).returned.statement);
 
-    l.body.addAll([fromJson, toJson]);
+    output.body.addAll([fromJson, toJson]);
   }
 }

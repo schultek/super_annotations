@@ -30,24 +30,24 @@ class MyAnnotation extends ClassAnnotation {
   /// You have to implement the [apply] method, which will be
   /// executed during the build phase
   /// @param target: A formal description of the annotated class, e.g. its name and fields
-  /// @param library: The library that will be generated as output of the build phase
+  /// @param output: The output that will be generated as part of the build phase
   @override
-  void apply(Class target, LibraryBuilder library) {
+  void apply(Class target, LibraryBuilder output) {
     /// You can add any declaration or code here
     /// like classes, extensions, mixins, etc.
     /// Example: Add the class name as a comment
-    library.body.add(Code('// - ${target.name}\n'));
+    output.body.add(Code('// - ${target.name}\n'));
   }
 }
 
 /// Optional: A custom function that will be executed
 /// at the beginning of the build phase, before any annotation
 /// See [CodeGen.runBefore]
-/// @param library: The library that will be generated as output of the build phase
-void addTitleComment(LibraryBuilder library) {
+/// @param output: The output that will be generated as part of the build phase
+void addTitleComment(LibraryBuilder output) {
   /// Modify the contents of the library
   /// Example: Add a title comment
-  library.body.add(Code('// Classes annotated with @MyAnnotation:\n'));
+  output.body.add(Code('// Classes annotated with @MyAnnotation:\n'));
 }
 
 void main() {}

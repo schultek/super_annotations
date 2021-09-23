@@ -5,8 +5,8 @@ import 'annotations2.dart';
 class MyAnnotation extends ClassAnnotation {
   const MyAnnotation();
   @override
-  void apply(Class target, LibraryBuilder library) {
-    library.body.add(Extension((e) => e
+  void apply(Class target, LibraryBuilder output) {
+    output.body.add(Extension((e) => e
       ..name = '${target.name}Extension'
       ..on = refer(target.name)
       ..methods.addAll([

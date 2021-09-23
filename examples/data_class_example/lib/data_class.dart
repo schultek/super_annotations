@@ -4,12 +4,12 @@ class DataClass extends ClassAnnotation {
   const DataClass();
 
   @override
-  void apply(Class c, LibraryBuilder l) {
+  void apply(Class target, LibraryBuilder output) {
     var copyWith = Method((m) => m
       ..name = 'copyWith'
-      ..returns = refer(c.name)
+      ..returns = refer(target.name)
       ..optionalParameters.addAll([
-        for (var p in c.constructors.first.parameters)
+        for (var p in target.constructors.first.parameters)
           p.rebuild((p) => p
             ..named = true
             ..required = false
@@ -17,23 +17,23 @@ class DataClass extends ClassAnnotation {
             ..defaultTo = null
             ..type = refer('${p.type!.symbol!}?'))
       ])
-      ..body = c.constructors.first
-          .invokeWith(
-              c.name, (p) => refer(p.name).ifNullThen(refer('this.${p.name}')))
+      ..body = target.constructors.first
+          .invokeWith(target.name,
+              (p) => refer(p.name).ifNullThen(refer('this.${p.name}')))
           .code);
 
     var toString = Method((m) => m
       ..name = 'toString'
       ..returns = refer('String')
       ..body = literalString(
-              '${c.name}{${c.fields.map((f) => '${f.name}: \$${f.name}').join(', ')}}')
+              '${target.name}{${target.fields.map((f) => '${f.name}: \$${f.name}').join(', ')}}')
           .code);
 
     var mixin = Mixin((m) => m
-      ..name = '_\$${c.name}'
+      ..name = '_\$${target.name}'
       ..fields.addAll([])
       ..methods.addAll([
-        for (var f in c.fields)
+        for (var f in target.fields)
           Method((m) => m
             ..name = f.name
             ..type = MethodType.getter
@@ -42,6 +42,6 @@ class DataClass extends ClassAnnotation {
         toString,
       ]));
 
-    l.body.add(mixin);
+    output.body.add(mixin);
   }
 }

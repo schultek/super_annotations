@@ -3,8 +3,8 @@ import 'package:super_annotations/super_annotations.dart';
 class MyAnnotation extends ClassAnnotation {
   const MyAnnotation();
   @override
-  void apply(Class target, LibraryBuilder library) {
-    library.body.add(Class((e) => e
+  void apply(Class target, LibraryBuilder output) {
+    output.body.add(Class((e) => e
       ..name = target.name.substring(1)
       ..extend = refer(target.name)
       ..fields.add(Field((f) => f

@@ -1,3 +1,7 @@
+# 0.3.2
+
+- Update variable naming
+
 # 0.3.1
 
 - Fix missing annotation imports

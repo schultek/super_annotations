@@ -6,14 +6,14 @@ class Freezed extends ClassAnnotation {
   const Freezed();
 
   @override
-  void apply(Class c, LibraryBuilder l) {
+  void apply(Class target, LibraryBuilder output) {
     var mapMethod = Method((mm) => mm
       ..name = 'map'
       ..lambda = true
       ..returns = refer('TResult')
       ..types.add(refer('TResult'))
       ..optionalParameters.addAll([
-        for (var factory in c.constructors.where((c) => c.factory))
+        for (var factory in target.constructors.where((c) => c.factory))
           Parameter((p) => p
             ..name = factory.name ?? factory.redirect!.symbol!.toLowerCase()
             ..type = FunctionType((ft) => ft
@@ -25,18 +25,18 @@ class Freezed extends ClassAnnotation {
       ]));
 
     var mc = Mixin((m) => m
-      ..name = '_\$${c.name}'
+      ..name = '_\$${target.name}'
       ..methods.addAll([
         mapMethod.rebuild((m) =>
             m.body = refer('UnimplementedError').newInstance([]).thrown.code),
       ]));
-    l.body.add(mc);
+    output.body.add(mc);
 
-    for (var factory in c.constructors.where((c) => c.factory)) {
+    for (var factory in target.constructors.where((c) => c.factory)) {
       if (factory.redirect != null) {
         var fc = Class((fc) => fc
           ..name = factory.redirect!.symbol
-          ..implements.add(refer(c.name))
+          ..implements.add(refer(target.name))
           ..fields.addAll([
             for (var p in factory.requiredParameters
                 .followedBy(factory.optionalParameters))
@@ -60,7 +60,7 @@ class Freezed extends ClassAnnotation {
                 refer(factory.name ?? factory.redirect!.symbol!.toLowerCase())
                     .call([refer('this')]).code),
           ]));
-        l.body.add(fc);
+        output.body.add(fc);
       }
     }
   }

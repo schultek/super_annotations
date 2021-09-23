@@ -17,10 +17,10 @@ abstract class ClassAnnotation {
   void modify(ClassBuilder builder) {}
 
   /// Receive the annotated class as target and modify the output library
-  void apply(Class target, LibraryBuilder library);
+  void apply(Class target, LibraryBuilder output);
 }
 
-typedef CodeGenHook = void Function(LibraryBuilder);
+typedef CodeGenHook = void Function(LibraryBuilder output);
 
 class CodeGen {
   /// Contains the path to the current source file for the build

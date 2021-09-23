@@ -8,7 +8,7 @@ Hassle-free static metaprogramming as you dream it. Use code generation and cust
 For the first time, this makes code generation applicable for all kinds of projects. 
 No complex setup, no experience in writing builders needed.
 
-> While this package is fully functional, it should be considered more of a concept piece for now on how to to static metaprogramming in dart.
+> While this package is fully functional, it should be considered more of a concept piece for now, on how to do static metaprogramming in dart.
 > Some parts took inspiration from [this github discussion](https://github.com/dart-lang/language/issues/1482).
 
 ## Outline
@@ -57,9 +57,9 @@ class MyAnnotation extends ClassAnnotation {
   /// You have to implement the [apply] method, which will be
   /// executed during the build phase
   /// @param target: A formal description of the annotated class, e.g. its name and fields
-  /// @param library: The library that will be generated as output of the build phase
+  /// @param output: The output that will be generated as part of the build phase
   @override
-  void apply(Class target, LibraryBuilder library) {
+  void apply(Class target, LibraryBuilder output) {
     // Your custom implementation here
   }
 }
@@ -103,7 +103,7 @@ This enables you to just care about the **semantics** of your generation output,
 the correct **syntax** as well as formatting the generated code.
 
 To define your generation outputs, modify the provided `LibraryBuilder` inside your annotations `apply()` method or a [generation hook](#generation-hooks).
-The most used way is to modify the library using `library.body.add()` or `library.body.addAll()`. For a list of all supported declarations, check out
+The most used way is to modify the library using `output.body.add()` or `output.body.addAll()`. For a list of all supported declarations, check out
 the [api reference](https://pub.dev/documentation/code_builder/latest/) of the code_builder package.
 
 ### Generation hooks
@@ -176,7 +176,7 @@ class MyAnnotation extends ClassAnnotation {
   final int myValue;
 
   @override
-  void apply(Class target, LibraryBuilder library) {
+  void apply(Class target, LibraryBuilder output) {
     // read on
   }
 }
@@ -207,7 +207,7 @@ class MyAnnotation extends ClassAnnotation {
   const MyAnnotation();
 
   @override
-  void apply(Class target, LibraryBuilder library) {
+  void apply(Class target, LibraryBuilder output) {
     // use [resolvedAnnotations] on any element (e.g. method) to get the actual annotation objects
     var methodAnnotation = target.methods.first.resolvedAnnotations.first;
     if (methodAnnotation is MyOtherAnnotation) { // yes
