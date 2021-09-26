@@ -11,13 +11,12 @@ class MyAnnotation extends ClassAnnotation {
       ..on = refer(target.name)
       ..methods.addAll([
         for (var field in target.fields)
-          for (var annotation in field.resolvedAnnotations)
-            if (annotation is WrapGetter)
-              Method((m) => m
-                ..name = annotation.getterName
-                ..type = MethodType.getter
-                ..returns = field.type
-                ..body = refer(field.name).returned.statement),
+          for (var annotation in field.resolvedAnnotationsOfType<WrapGetter>())
+            Method((m) => m
+              ..name = annotation.getterName
+              ..type = MethodType.getter
+              ..returns = field.type
+              ..body = refer(field.name).returned.statement),
       ])));
   }
 }

@@ -18,6 +18,7 @@ No complex setup, no experience in writing builders needed.
   - [Generation hooks](#generation-hooks)
   - [When it fails](#when-it-fails)
   - [Debugging](#debugging)
+- [Available Annotations](#available-annotations)  
 - [Mastering Annotations](#mastering-annotations)
   - [Annotation parameters](#annotation-parameters)
   - [Resolved annotations](#resolved-annotations)
@@ -153,6 +154,13 @@ In your IDE add a new run configuration for a dart command line app with the fol
 
 Now you can set breakpoints in your annotations and debug them by selecting the created run config and clicking the `Debug` button.
 
+## Available Annotations
+
+Currently there are two types of annotation classes available.
+
+- **ClassAnnotation**: Extend this class to create a custom annotation for class declarations
+- **EnumAnnotation**: Extend this class to create a custom annotation for enum declarations
+
 ## Mastering Annotations
 
 With `super_annotations`, your build and runtime environment share the same codebase. This enables a few unique perks, 
@@ -208,11 +216,15 @@ class MyAnnotation extends ClassAnnotation {
 
   @override
   void apply(Class target, LibraryBuilder output) {
+    var element = target.methods.first;
     // use [resolvedAnnotations] on any element (e.g. method) to get the actual annotation objects
-    var methodAnnotation = target.methods.first.resolvedAnnotations.first;
-    if (methodAnnotation is MyOtherAnnotation) { // yes
-      // do something with [methodAnnotation.label]
+    var firstAnnotation = element.resolvedAnnotations.first;
+    if (firstAnnotation is MyOtherAnnotation) {
+      // do something with [firstAnnotation.label]
     }
+
+    // use [resolvedAnnotationsOfType] when you are expecting a specific annotation
+    var allMethodAnnotations = element.resolvedAnnotationsOfType<MyOtherAnnotation>();
   }
 }
 ```

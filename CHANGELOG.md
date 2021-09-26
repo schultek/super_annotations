@@ -1,3 +1,7 @@
+# 0.3.3
+
+- Added support for enum annotations
+
 # 0.3.2
 
 - Update variable naming

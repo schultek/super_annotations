@@ -8,16 +8,25 @@ import 'package:code_builder/src/specs/code.dart';
 
 export 'package:code_builder/code_builder.dart';
 
-/// To be extended by custom annotations
-abstract class ClassAnnotation {
+abstract class SuperAnnotation<T extends Spec> {
+  const SuperAnnotation();
+
+  /// Receive the annotated declaration as target and modify the output library
+  void apply(T target, LibraryBuilder output);
+}
+
+/// Extend this to create a custom annotation for classes
+abstract class ClassAnnotation extends SuperAnnotation<Class> {
   const ClassAnnotation();
 
   /// Overwrite to modify the annotated class before being passed
   /// to the [apply] method of any annotation
   void modify(ClassBuilder builder) {}
+}
 
-  /// Receive the annotated class as target and modify the output library
-  void apply(Class target, LibraryBuilder output);
+/// Extend this to create a custom annotation for enums
+abstract class EnumAnnotation extends SuperAnnotation<Enum> {
+  const EnumAnnotation();
 }
 
 typedef CodeGenHook = void Function(LibraryBuilder output);
@@ -89,6 +98,10 @@ extension HasResolvedAnnotations on HasAnnotations {
         .whereType<ResolvedAnnotation>()
         .map((a) => a.annotation)
         .toList();
+  }
+
+  List<T> resolvedAnnotationsOfType<T>() {
+    return resolvedAnnotations.whereType<T>().toList();
   }
 }
 

@@ -4,27 +4,41 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/dart/element/type_visitor.dart';
+// ignore: implementation_imports
+import 'package:analyzer/src/dart/element/element.dart'
+    show ConstFieldElementImpl_EnumValue;
 
 import 'imports_builder.dart';
 
 extension ClassCodeBuilder on ClassElement {
   String builder(ImportsBuilder imports, [List<String> writes = const []]) {
-    return """
-      Class((c) => c
-        ..name = '${name.escaped}'
-        ${isAbstract ? '..abstract = true' : ''}
-        ${supertype != null ? "..extend = ${supertype!.builder()}" : ''}
-        ${typeParameters.isNotEmpty ? "..types.addAll([${typeParameters.map((t) => t.builder()).join(',')}])" : ''}
-        ${interfaces.isNotEmpty ? "..implements.addAll([${interfaces.map((t) => t.builder()).join(', ')}])" : ''}
-        ${fields.isNotEmpty ? "..fields.addAll([${fields.map((f) => f.builder(imports)).join(',')}])" : ''}
-        ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder(imports)).join(',')}])" : ''}
-        ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => m.builder()).join(',')}])" : ''}
-        ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder(imports)).join(',')}])" : ''}
-        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
-        ${writes.map((w) => "..run((c) => $w.modify(c))").join("\n")}
-      )
-      ${writes.map((w) => "..run((c) => $w.apply(c, l))").join("\n")};
-    """;
+    if (isEnum) {
+      return """
+        Enum((e) => e
+          ..name = '${name.escaped}'
+          ..values.addAll([${fields.whereType<ConstFieldElementImpl_EnumValue>().map((v) => v.builder(imports)).join(',')}])
+          ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
+        )
+        ${writes.map((w) => "..run((e) => $w.apply(e, l))").join("\n")};
+      """;
+    } else {
+      return """
+        Class((c) => c
+          ..name = '${name.escaped}'
+          ${isAbstract ? '..abstract = true' : ''}
+          ${supertype != null ? "..extend = ${supertype!.builder()}" : ''}
+          ${typeParameters.isNotEmpty ? "..types.addAll([${typeParameters.map((t) => t.builder()).join(',')}])" : ''}
+          ${interfaces.isNotEmpty ? "..implements.addAll([${interfaces.map((t) => t.builder()).join(',')}])" : ''}
+          ${fields.isNotEmpty ? "..fields.addAll([${fields.map((f) => f.builder(imports)).join(',')}])" : ''}
+          ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder(imports)).join(',')}])" : ''}
+          ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => m.builder()).join(',')}])" : ''}
+          ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder(imports)).join(',')}])" : ''}
+          ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
+          ${writes.map((w) => "..run((c) => $w.modify(c))").join("\n")}
+        )
+        ${writes.map((w) => "..run((c) => $w.apply(c, l))").join("\n")};
+      """;
+    }
   }
 }
 
@@ -37,6 +51,17 @@ extension FieldCodeBuilder on FieldElement {
         ..modifier = FieldModifier.${isFinal ? 'final\$' : isConst ? 'constant' : 'var\$'}
         ..static = $isStatic
         ..late = $isLate
+        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
+      )
+    """;
+  }
+}
+
+extension EnumValueBuilder on ConstFieldElementImpl_EnumValue {
+  String builder(ImportsBuilder imports) {
+    return """
+      EnumValue((v) => v
+        ..name = '${name.escaped}'
         ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
       )
     """;

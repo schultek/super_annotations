@@ -13,6 +13,7 @@ import 'code_builder_string.dart';
 import 'imports_builder.dart';
 
 const classAnnotationChecker = TypeChecker.fromRuntime(ClassAnnotation);
+const enumAnnotationChecker = TypeChecker.fromRuntime(EnumAnnotation);
 const codeGenChecker = TypeChecker.fromRuntime(CodeGen);
 
 class RunnerBuilder {
@@ -35,6 +36,7 @@ class RunnerBuilder {
       if (library.isInSdk) continue;
 
       var classes = library.units.expand((u) => u.classes).toList();
+      var enums = library.units.expand((u) => u.enums).toList();
 
       for (var elem in classes) {
         for (var meta in elem.metadata) {
@@ -47,6 +49,24 @@ class RunnerBuilder {
           } else if (meta.element is PropertyAccessorElement) {
             var type = (meta.element! as PropertyAccessorElement).returnType;
             if (classAnnotationChecker.isAssignableFromType(type)) {
+              (runBuild[elem] ??= []).add(meta.toSource().substring(1));
+              imports.add(meta.element!.library!.source.uri);
+            }
+          }
+        }
+      }
+
+      for (var elem in enums) {
+        for (var meta in elem.metadata) {
+          if (meta.element is ConstructorElement) {
+            var parent = (meta.element! as ConstructorElement).enclosingElement;
+            if (enumAnnotationChecker.isAssignableFrom(parent)) {
+              (runBuild[elem] ??= []).add(meta.toSource().substring(1));
+              imports.add(meta.element!.library!.source.uri);
+            }
+          } else if (meta.element is PropertyAccessorElement) {
+            var type = (meta.element! as PropertyAccessorElement).returnType;
+            if (enumAnnotationChecker.isAssignableFromType(type)) {
               (runBuild[elem] ??= []).add(meta.toSource().substring(1));
               imports.add(meta.element!.library!.source.uri);
             }
