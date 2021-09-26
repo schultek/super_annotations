@@ -35,6 +35,9 @@ class CodeGen {
   /// Contains the path to the current source file for the build
   static String currentFile = '';
 
+  /// Contains the current target
+  static String currentTarget = '';
+
   /// Functions to be run at the beginning of the build phase,
   /// before any annotation
   final List<CodeGenHook> runBefore;
@@ -43,7 +46,14 @@ class CodeGen {
   /// after every annotation
   final List<CodeGenHook> runAfter;
 
-  const CodeGen({this.runBefore = const [], this.runAfter = const []});
+  /// Generation targets
+  final List<String> targets;
+
+  const CodeGen({
+    this.runBefore = const [],
+    this.runAfter = const [],
+    this.targets = const [],
+  });
 
   static void addPartOfDirective(LibraryBuilder library) {
     library.directives.add(Directive.partOf(CodeGen.currentFile));

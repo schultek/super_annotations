@@ -18,11 +18,12 @@ const codeGenChecker = TypeChecker.fromRuntime(CodeGen);
 
 class RunnerBuilder {
   final BuildStep buildStep;
+  final String target;
   final DartObject annotation;
   final Map<String, dynamic> config;
 
   final AssetId runnerId;
-  RunnerBuilder(this.buildStep, this.annotation, this.config)
+  RunnerBuilder(this.buildStep, this.target, this.annotation, this.config)
       : runnerId = buildStep.inputId.changeExtension('.runner.g.dart');
 
   Future<void> create() async {
@@ -86,6 +87,7 @@ class RunnerBuilder {
       
       void main(List<String> args, SendPort port) {
         CodeGen.currentFile = '${path.basename(buildStep.inputId.path)}';
+        CodeGen.currentTarget = '${target.escaped}';
         var library = Library((l) {
           ${runBefore.map((fn) => '$fn(l);\n').join()}
           ${runAnnotations.join('\n')}

@@ -1,3 +1,7 @@
+# 0.3.4
+
+- Added support for generation targets
+
 # 0.3.3
 
 - Added support for enum annotations
