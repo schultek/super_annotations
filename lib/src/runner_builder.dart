@@ -14,6 +14,7 @@ import 'imports_builder.dart';
 
 const classAnnotationChecker = TypeChecker.fromRuntime(ClassAnnotation);
 const enumAnnotationChecker = TypeChecker.fromRuntime(EnumAnnotation);
+const functionAnnotationChecker = TypeChecker.fromRuntime(FunctionAnnotation);
 const codeGenChecker = TypeChecker.fromRuntime(CodeGen);
 
 class RunnerBuilder {
@@ -27,7 +28,9 @@ class RunnerBuilder {
       : runnerId = buildStep.inputId.changeExtension('.runner.g.dart');
 
   Future<void> create() async {
-    Map<ClassElement, List<String>> runBuild = {};
+    Map<ClassElement, List<String>> classTargets = {};
+    Map<ClassElement, List<String>> enumTargets = {};
+    Map<FunctionElement, List<String>> functionTargets = {};
 
     var imports = ImportsBuilder(buildStep.inputId)
       ..add(Uri.parse('dart:isolate'))
@@ -36,51 +39,33 @@ class RunnerBuilder {
     await for (var library in buildStep.resolver.libraries) {
       if (library.isInSdk) continue;
 
-      var classes = library.units.expand((u) => u.classes).toList();
-      var enums = library.units.expand((u) => u.enums).toList();
+      classTargets.addAll(inspectElements(
+        library.units.expand((u) => u.classes),
+        classAnnotationChecker,
+        imports,
+      ));
 
-      for (var elem in classes) {
-        for (var meta in elem.metadata) {
-          if (meta.element is ConstructorElement) {
-            var parent = (meta.element! as ConstructorElement).enclosingElement;
-            if (classAnnotationChecker.isAssignableFrom(parent)) {
-              (runBuild[elem] ??= []).add(meta.toSource().substring(1));
-              imports.add(meta.element!.library!.source.uri);
-            }
-          } else if (meta.element is PropertyAccessorElement) {
-            var type = (meta.element! as PropertyAccessorElement).returnType;
-            if (classAnnotationChecker.isAssignableFromType(type)) {
-              (runBuild[elem] ??= []).add(meta.toSource().substring(1));
-              imports.add(meta.element!.library!.source.uri);
-            }
-          }
-        }
-      }
+      enumTargets.addAll(inspectElements(
+        library.units.expand((u) => u.enums),
+        enumAnnotationChecker,
+        imports,
+      ));
 
-      for (var elem in enums) {
-        for (var meta in elem.metadata) {
-          if (meta.element is ConstructorElement) {
-            var parent = (meta.element! as ConstructorElement).enclosingElement;
-            if (enumAnnotationChecker.isAssignableFrom(parent)) {
-              (runBuild[elem] ??= []).add(meta.toSource().substring(1));
-              imports.add(meta.element!.library!.source.uri);
-            }
-          } else if (meta.element is PropertyAccessorElement) {
-            var type = (meta.element! as PropertyAccessorElement).returnType;
-            if (enumAnnotationChecker.isAssignableFromType(type)) {
-              (runBuild[elem] ??= []).add(meta.toSource().substring(1));
-              imports.add(meta.element!.library!.source.uri);
-            }
-          }
-        }
-      }
+      functionTargets.addAll(inspectElements(
+        library.units.expand((u) => u.functions),
+        functionAnnotationChecker,
+        imports,
+      ));
     }
 
     var runAfter = getHooks(annotation.getField('runAfter'), imports);
     var runBefore = getHooks(annotation.getField('runBefore'), imports);
 
-    var runAnnotations =
-        runBuild.entries.map((e) => e.key.builder(imports, e.value)).toList();
+    var runAnnotations = [
+      ...classTargets.entries.map((e) => e.key.builder(imports, e.value)),
+      ...enumTargets.entries.map((e) => e.key.builder(imports, e.value)),
+      ...functionTargets.entries.map((e) => e.key.builder(imports, e.value)),
+    ];
 
     var runnerCode = """
       ${imports.write()}
@@ -99,6 +84,32 @@ class RunnerBuilder {
 
     await File(runnerId.path).writeAsString(
         DartFormatter(fixes: [StyleFix.docComments]).format(runnerCode));
+  }
+
+  Map<E, List<String>> inspectElements<E extends Element>(
+    Iterable<E> elements,
+    TypeChecker checker,
+    ImportsBuilder imports,
+  ) {
+    Map<E, List<String>> targets = {};
+    for (var elem in elements) {
+      for (var meta in elem.metadata) {
+        if (meta.element is ConstructorElement) {
+          var parent = (meta.element! as ConstructorElement).enclosingElement;
+          if (checker.isAssignableFrom(parent)) {
+            (targets[elem] ??= []).add(meta.toSource().substring(1));
+            imports.add(meta.element!.library!.source.uri);
+          }
+        } else if (meta.element is PropertyAccessorElement) {
+          var type = (meta.element! as PropertyAccessorElement).returnType;
+          if (checker.isAssignableFromType(type)) {
+            (targets[elem] ??= []).add(meta.toSource().substring(1));
+            imports.add(meta.element!.library!.source.uri);
+          }
+        }
+      }
+    }
+    return targets;
   }
 
   Iterable<String> getHooks(DartObject? object, ImportsBuilder imports) {
@@ -124,7 +135,13 @@ class RunnerBuilder {
     var resultFuture = dataPort.first;
 
     try {
-      await Isolate.spawnUri(runnerId.uri, [], dataPort.sendPort);
+      await Isolate.spawnUri(
+        runnerId.uri,
+        [],
+        dataPort.sendPort,
+        onExit: dataPort.sendPort,
+        onError: dataPort.sendPort,
+      );
     } on IsolateSpawnException catch (e) {
       var m = 'Unable to spawn isolate: ';
       if (e.message.startsWith(m)) {
@@ -135,7 +152,14 @@ class RunnerBuilder {
       }
     }
 
-    return await resultFuture as String;
+    var result = await resultFuture;
+
+    if (result is String) {
+      return result;
+    } else {
+      print(result);
+      throw Exception('Runner did fail with the output above.');
+    }
   }
 
   Future<void> cleanup() async {

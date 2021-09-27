@@ -1,3 +1,8 @@
+# 0.3.5
+
+- Added support for function annotations
+- Fix handling of generation targets
+
 # 0.3.4
 
 - Added support for generation targets

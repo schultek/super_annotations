@@ -19,17 +19,12 @@ class SuperAnnotationsBuilder extends Builder {
       return;
     }
 
-    var targets = getTargets(codeGenAnnotation);
-
-    for (var target in targets) {
+    for (var outputId in buildStep.allowedOutputs) {
+      var target = outputId.path.split('.').reversed.skip(1).first;
       var output = await RunnerBuilder(
-        buildStep,
-        target,
-        codeGenAnnotation,
-        options.config,
-      ).run();
+              buildStep, target, codeGenAnnotation, options.config)
+          .run();
 
-      var outputId = buildStep.inputId.changeExtension('.$target.dart');
       await buildStep.writeAsString(outputId, DartFormatter().format(output));
     }
   }
@@ -42,24 +37,10 @@ class SuperAnnotationsBuilder extends Builder {
   @override
   Map<String, List<String>> get buildExtensions {
     return {
-      '.dart': [
-        '.g.dart',
-        ...options.config['targets']?.map((t) => '.$t.dart') ?? []
-      ]
+      '.dart': (options.config['targets'] as List?)
+              ?.map((t) => '.$t.dart')
+              .toList() ??
+          ['.g.dart']
     };
-  }
-
-  List<String> getTargets(DartObject annotation) {
-    var targets = annotation
-            .getField('targets')
-            ?.toListValue()
-            ?.map((o) => o.toStringValue())
-            .whereType<String>()
-            .toList() ??
-        [];
-    if (targets.isEmpty) {
-      targets.add('g');
-    }
-    return targets;
   }
 }

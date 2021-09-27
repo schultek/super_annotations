@@ -3,7 +3,7 @@
 This strategy builds on top of the part_of strategy.
 Instead generating a mixin, it will generate a new class extending the original class.
 
-This strategy is useful if you want to modify the existing behaviour of a class.
+This strategy is useful if you want to modify the existing behaviour of a class, e.g. wrapping a function.
 
 ## What it does
 

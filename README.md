@@ -156,10 +156,13 @@ Now you can set breakpoints in your annotations and debug them by selecting the 
 
 ## Available Annotations
 
-Currently there are two types of annotation classes available.
+Currently there are three types of annotation classes available.
 
 - **ClassAnnotation**: Extend this class to create a custom annotation for class declarations
 - **EnumAnnotation**: Extend this class to create a custom annotation for enum declarations
+- **FunctionAnnotation**: Extend this class to create a custom annotation for top-level functions
+
+Have a look at [this example](https://github.com/schultek/super_annotations/tree/main/examples/annotations_example) to see them in action.
 
 ## Mastering Annotations
 

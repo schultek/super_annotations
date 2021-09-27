@@ -68,6 +68,24 @@ extension EnumValueBuilder on ConstFieldElementImpl_EnumValue {
   }
 }
 
+extension FunctionBuilder on FunctionElement {
+  String builder(ImportsBuilder imports, [List<String> writes = const []]) {
+    return """
+      Method((m) => m
+        ..name = '${name.escaped}'
+        ..types.addAll([${typeParameters.map((t) => t.builder()).join(',')}])
+        ..returns = ${returnType.builder()}
+        ..external = $isExternal
+        ${isAsynchronous || isGenerator ? '..modifier = MethodModifier.${isAsynchronous ? 'async' : 'sync'}${isGenerator ? '*' : ''}' : ''}
+        ..optionalParameters.addAll([${parameters.where((p) => !p.isRequiredPositional).map((p) => p.builder(imports)).join(',')}])
+        ..requiredParameters.addAll([${parameters.where((p) => p.isRequiredPositional).map((p) => p.builder(imports)).join(',')}])
+        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
+      )
+      ${writes.map((w) => "..run((m) => $w.apply(m, l))").join("\n")};
+    """;
+  }
+}
+
 extension ConstructorCodeBuilder on ConstructorElement {
   String builder(ImportsBuilder imports) {
     List<String> reqParams = [], optParams = [];
@@ -86,8 +104,8 @@ extension ConstructorCodeBuilder on ConstructorElement {
         ${name.isNotEmpty ? "..name = '${name.escaped}'" : ""}
         ..factory = $isFactory
         ..constant = $isConst
-        ${reqParams.isNotEmpty ? '..requiredParameters.addAll([${reqParams.join()}])' : ''}
-        ${optParams.isNotEmpty ? '..optionalParameters.addAll([${optParams.join()}])' : ''}
+        ${reqParams.isNotEmpty ? '..requiredParameters.addAll([${reqParams.join(',')}])' : ''}
+        ${optParams.isNotEmpty ? '..optionalParameters.addAll([${optParams.join(',')}])' : ''}
         ${node?.redirectedConstructor != null ? "..redirect = refer('${node!.redirectedConstructor!.toString().escaped}')" : ''}
         ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
       )
@@ -107,7 +125,7 @@ extension ParameterCodeBuilder on ParameterElement {
         ..required = ${isNamed && isNotOptional}
         ..defaultTo = ${hasDefaultValue ? "ResolvedValue($defaultValueCode, '${defaultValueCode!.escaped}')" : null}
         ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
-      ),
+      )
     """;
   }
 }
@@ -118,8 +136,9 @@ extension MethodCodeBuilder on MethodElement {
       Method((m) => m
         ..name = '${name.escaped}'
         ..returns = ${returnType.builder()}
-        ..requiredParameters.addAll([${parameters.where((p) => p.isRequiredPositional).map((p) => p.builder(imports)).join()}])
-        ..optionalParameters.addAll([${parameters.where((p) => !p.isRequiredPositional).map((p) => p.builder(imports)).join()}])
+        ..types.addAll([${typeParameters.map((t) => t.builder()).join(',')}])
+        ..requiredParameters.addAll([${parameters.where((p) => p.isRequiredPositional).map((p) => p.builder(imports)).join(',')}])
+        ..optionalParameters.addAll([${parameters.where((p) => !p.isRequiredPositional).map((p) => p.builder(imports)).join(',')}])
         ..static = $isStatic
         ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
       )

@@ -29,6 +29,11 @@ abstract class EnumAnnotation extends SuperAnnotation<Enum> {
   const EnumAnnotation();
 }
 
+/// Extend this to create a custom annotation for functions
+abstract class FunctionAnnotation extends SuperAnnotation<Method> {
+  const FunctionAnnotation();
+}
+
 typedef CodeGenHook = void Function(LibraryBuilder output);
 
 class CodeGen {
@@ -46,13 +51,9 @@ class CodeGen {
   /// after every annotation
   final List<CodeGenHook> runAfter;
 
-  /// Generation targets
-  final List<String> targets;
-
   const CodeGen({
     this.runBefore = const [],
     this.runAfter = const [],
-    this.targets = const [],
   });
 
   static void addPartOfDirective(LibraryBuilder library) {
