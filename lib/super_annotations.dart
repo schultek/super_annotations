@@ -51,9 +51,12 @@ class CodeGen {
   /// after every annotation
   final List<CodeGenHook> runAfter;
 
+  final List<String> targets;
+
   const CodeGen({
     this.runBefore = const [],
     this.runAfter = const [],
+    this.targets = const [],
   });
 
   static void addPartOfDirective(LibraryBuilder library) {

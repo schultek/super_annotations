@@ -1,6 +1,6 @@
 name: super_annotations
 description: Write your code generation functions naturally alongside your normal code. Define and use custom annotations in the same file or project.
-version: 0.3.5
+version: 0.3.6
 repository: https://github.com/schultek/super_annotations
 issue_tracker: https://github.com/schultek/super_annotations/issues
 
@@ -13,7 +13,7 @@ dependencies:
   source_gen: ^1.0.5
 
 dev_dependencies:
-  build_runner: ^2.0.5
+  build_runner: ^2.1.2
   lints: ^1.0.1
   test: ^1.17.4
 

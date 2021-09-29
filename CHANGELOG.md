@@ -1,3 +1,7 @@
+# 0.3.6
+
+- Added dynamic generation targets
+
 # 0.3.5
 
 - Added support for function annotations

@@ -15,20 +15,15 @@ No complex setup, no experience in writing builders needed.
 
 - [Get Started](#get-started)
 - [Generating code](#generating-code)
+  - [Available Annotations](#available-annotations)  
   - [Generation hooks](#generation-hooks)
+  - [Generation targets](#generation-targets)
   - [When it fails](#when-it-fails)
   - [Debugging](#debugging)
-- [Available Annotations](#available-annotations)  
 - [Mastering Annotations](#mastering-annotations)
   - [Annotation parameters](#annotation-parameters)
   - [Resolved annotations](#resolved-annotations)
 - [Examples](#examples)
-  - [Part-of strategy](#part-of-strategy)
-  - [Inherit strategy](#inherit-strategy)
-  - [Json serialization](#json-serialization)
-  - [Sealed classes](#sealed-classes)
-  - [Data classes](#data-classes)
-  - [Resolved annotations](#resolved-annotations-example)
 - [How does it work?](#how-does-it-work)
   - [Bonus: Why super?](#bonus-why-super)
 
@@ -107,6 +102,16 @@ To define your generation outputs, modify the provided `LibraryBuilder` inside y
 The most used way is to modify the library using `output.body.add()` or `output.body.addAll()`. For a list of all supported declarations, check out
 the [api reference](https://pub.dev/documentation/code_builder/latest/) of the code_builder package.
 
+### Available Annotations
+
+Currently there are three types of annotation classes available.
+
+- **ClassAnnotation**: Extend this class to create a custom annotation for class declarations
+- **EnumAnnotation**: Extend this class to create a custom annotation for enum declarations
+- **FunctionAnnotation**: Extend this class to create a custom annotation for top-level functions
+
+Have a look at [this example](https://github.com/schultek/super_annotations/tree/main/examples/annotations_example) to see them in action.
+
 ### Generation hooks
 
 With custom annotations, you have the possibility to generate code for each annotated class. 
@@ -123,6 +128,47 @@ library main;
 ```
 
 As the names suggest, the annotated function will the be run **before** everything else, or **after** everything else.
+
+### Generation targets
+
+By default, there is a single generation target set to `.g.dart`, however you can set different targets by passing them to the `@CodeGen()` annotation:
+
+```dart
+@CodeGen(
+  targets: ['client', 'server']
+)
+library main;
+```
+
+Using this configuration, two files `.client.dart` and `.server.dart` would be generated instead of the `.g.dart` file.
+Your annotations will be called once for each target. In your annotations code, you can use `CodeGen.currentTarget` to get the current target:
+
+```dart
+class MyAnnotation extends ClassAnnotation {
+  const MyAnnotation();
+
+  @override
+  void apply(Class target, LibraryBuilder output) {
+    if (CodeGen.currentTarget == 'client') {
+      output.body.add(Code('// GENERATED CLIENT LIBRARY'));
+    } else if (CodeGen.currentTarget == 'server') {
+      output.body.add(Code('// GENERATED SERVER LIBRARY'));
+    }
+  }
+}
+```
+
+Due to the limitations of `build_runner` you cannot specify arbitrary targets, but must choose from a predefined set of supported targets.
+Supported by default are: `g`, `super`, `client`, `server`, `freezed`, `json`, `data`, `mapper`, `gen`, `def`, `types`, `api`, `schema`, `db`, `query`, `part` and `meta`.
+
+If you need more targets, you have to use a `build.yaml` file and specify add the targets in the builder options:
+
+```yaml
+global_options:
+  super_annotations:
+    options:
+      targets: [ mytarget ]
+```
 
 ### When it fails
 
@@ -146,23 +192,14 @@ The builder is then smart enough to only import the needed files with the annota
 
 Since we use `build_runner` to execute our annotation code, it is not straight forward to debug our code.
 To enable debugging, you need to manually add the script that `pub run build_runner build` calls to your run configurations.
-This script is inside the `.dart_tool` folder at the root of your project. 
+This script is inside the `.dart_tool` folder at the root of your project (after running manually once). 
 In your IDE add a new run configuration for a dart command line app with the following values:
 
 - Dart file: <project_root>/.dart_tool/build/entrypoint/build.dart
 - Program arguments: build --delete-conflicting-outputs
+- Working directory: <project_root>
 
 Now you can set breakpoints in your annotations and debug them by selecting the created run config and clicking the `Debug` button.
-
-## Available Annotations
-
-Currently there are three types of annotation classes available.
-
-- **ClassAnnotation**: Extend this class to create a custom annotation for class declarations
-- **EnumAnnotation**: Extend this class to create a custom annotation for enum declarations
-- **FunctionAnnotation**: Extend this class to create a custom annotation for top-level functions
-
-Have a look at [this example](https://github.com/schultek/super_annotations/tree/main/examples/annotations_example) to see them in action.
 
 ## Mastering Annotations
 
@@ -238,44 +275,19 @@ class MyAnnotation extends ClassAnnotation {
 
 We prepared a few examples, that showcase different things that you can do with this package.
 
-### Part-of strategy
+- [**Part-of strategy**](https://github.com/schultek/super_annotations/tree/main/examples/part_of_strategy): This example demonstrates a strategy using part_of directives in order to extend existing declarations or add new ones.
 
-Source: [part\_of_strategy](https://github.com/schultek/super_annotations/tree/main/examples/part_of_strategy)
+- [**Inherit strategy**](https://github.com/schultek/super_annotations/tree/main/examples/inherit_strategy): This example demonstrates a strategy using inheritance in order to modify existing class declarations.
 
-This example demonstrates a strategy using part_of directives in order to extend existing declarations or add new ones.
+- [**Json serialization**](https://github.com/schultek/super_annotations/tree/main/examples/json_serialization_example): This example shows how to generate json serialization code, which is probably the most common use-case for code generation. It is inspired by and mimics the basic behavior of [json_serializable](https://pub.dev/packages/json_serializable)
 
-### Inherit strategy
-
-Source: [inherit\_strategy](https://github.com/schultek/super_annotations/tree/main/examples/inherit_strategy)
-
-This example demonstrates a strategy using inheritance in order to modify existing class declarations.
-
-### Json serialization
-
-Source: [json\_serialization_example](https://github.com/schultek/super_annotations/tree/main/examples/json_serialization_example)
-
-This example shows how to generate json serialization code, which is probably the most common use-case for code generation. 
-It is inspired by and mimics the basic behavior of [json_serializable](https://pub.dev/packages/json_serializable)
-
-### Data classes
-
-Source: [data\_class_example](https://github.com/schultek/super_annotations/tree/main/examples/data_class_example)
-
-This example shows how to generate utility methods for data classes. 
+- [**Data classes**](https://github.com/schultek/super_annotations/tree/main/examples/data_class_example): This example shows how to generate utility methods for data classes. 
 This will generate `copyWith` and `toString` methods for each annotated class.
 
-### Sealed classes
-
-Source: [sealed\_classes_example](https://github.com/schultek/super_annotations/tree/main/examples/sealed_classes_example)
-
-This example shows how to generate sealed classes / union types. 
+- [**Sealed classes / Freezed**](https://github.com/schultek/super_annotations/tree/main/examples/sealed_classes_example): This example shows how to generate sealed classes / union types. 
 It is inspired by and mimics the basic behavior of [freezed](https://pub.dev/packages/freezed)
 
-### Resolved annotations example
-
-Source: [resolved\_annotations_example](https://github.com/schultek/super_annotations/tree/main/examples/resolved_annotations_example)
-
-This example demonstrates how to use [resolved annotations](#resolved-annotations).
+- [**Resolved annotations**](https://github.com/schultek/super_annotations/tree/main/examples/resolved_annotations_example): This example demonstrates how to use [resolved annotations](#resolved-annotations).
 
 ## How does it work?
 

@@ -19,8 +19,17 @@ class SuperAnnotationsBuilder extends Builder {
       return;
     }
 
-    for (var outputId in buildStep.allowedOutputs) {
-      var target = outputId.path.split('.').reversed.skip(1).first;
+    var targets = codeGenAnnotation
+        .getField('targets')
+        ?.toListValue()
+        ?.map((o) => o.toStringValue())
+        .whereType<String>();
+    if (targets == null || targets.isEmpty) {
+      targets = ['g'];
+    }
+
+    for (var target in targets) {
+      var outputId = buildStep.inputId.changeExtension('.$target.dart');
       var output = await RunnerBuilder(
               buildStep, target, codeGenAnnotation, options.config)
           .run();
@@ -35,12 +44,27 @@ class SuperAnnotationsBuilder extends Builder {
   }
 
   @override
-  Map<String, List<String>> get buildExtensions {
-    return {
-      '.dart': (options.config['targets'] as List?)
-              ?.map((t) => '.$t.dart')
-              .toList() ??
-          ['.g.dart']
-    };
-  }
+  Map<String, List<String>> get buildExtensions => {
+        '.dart': [
+          '.g.dart',
+          '.super.dart',
+          '.client.dart',
+          '.server.dart',
+          '.freezed.dart',
+          '.json.dart',
+          '.data.dart',
+          '.mapper.dart',
+          '.gen.dart',
+          '.def.dart',
+          '.types.dart',
+          '.api.dart',
+          '.schema.dart',
+          '.db.dart',
+          '.query.dart',
+          '.part.dart',
+          '.meta.dart',
+          if (options.config['targets'] is List)
+            ...options.config['targets'].map((t) => '.$t.dart')
+        ]
+      };
 }
