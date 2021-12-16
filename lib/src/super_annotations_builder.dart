@@ -10,6 +10,15 @@ class SuperAnnotationsBuilder extends Builder {
   final BuilderOptions options;
   SuperAnnotationsBuilder(this.options);
 
+  List<String> get targetOptions {
+    var targets = options.config['targets'];
+    if (targets is List) {
+      return targets.cast<String>();
+    } else {
+      return [];
+    }
+  }
+
   @override
   FutureOr<void> build(BuildStep buildStep) async {
     var codeGenAnnotation =
@@ -25,7 +34,11 @@ class SuperAnnotationsBuilder extends Builder {
         ?.map((o) => o.toStringValue())
         .whereType<String>();
     if (targets == null || targets.isEmpty) {
-      targets = ['g'];
+      if (targetOptions.isNotEmpty) {
+        targets = [targetOptions.first];
+      } else {
+        targets = ['g'];
+      }
     }
 
     for (var target in targets) {
@@ -46,25 +59,27 @@ class SuperAnnotationsBuilder extends Builder {
   @override
   Map<String, List<String>> get buildExtensions => {
         '.dart': [
-          '.g.dart',
-          '.super.dart',
-          '.client.dart',
-          '.server.dart',
-          '.freezed.dart',
-          '.json.dart',
-          '.data.dart',
-          '.mapper.dart',
-          '.gen.dart',
-          '.def.dart',
-          '.types.dart',
-          '.api.dart',
-          '.schema.dart',
-          '.db.dart',
-          '.query.dart',
-          '.part.dart',
-          '.meta.dart',
-          if (options.config['targets'] is List)
-            ...options.config['targets'].map((t) => '.$t.dart')
+          if (targetOptions.isNotEmpty)
+            ...targetOptions.map((t) => '.$t.dart')
+          else ...[
+            '.g.dart',
+            '.super.dart',
+            '.client.dart',
+            '.server.dart',
+            '.freezed.dart',
+            '.json.dart',
+            '.data.dart',
+            '.mapper.dart',
+            '.gen.dart',
+            '.def.dart',
+            '.types.dart',
+            '.api.dart',
+            '.schema.dart',
+            '.db.dart',
+            '.query.dart',
+            '.part.dart',
+            '.meta.dart',
+          ]
         ]
       };
 }

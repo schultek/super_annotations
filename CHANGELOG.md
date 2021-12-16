@@ -1,3 +1,7 @@
+# 0.3.7
+
+- Change how targets are defined to resolve conflicts with other code-gen packages like source_gen
+
 # 0.3.6
 
 - Added dynamic generation targets
