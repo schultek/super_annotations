@@ -51,18 +51,25 @@ class CodeGen {
   /// after every annotation
   final List<CodeGenHook> runAfter;
 
+  /// Set of build targets
   final List<String> targets;
+
+  /// Discovery mode
+  final DiscoveryMode discoveryMode;
 
   const CodeGen({
     this.runBefore = const [],
     this.runAfter = const [],
     this.targets = const [],
+    this.discoveryMode = DiscoveryMode.recursiveImports,
   });
 
   static void addPartOfDirective(LibraryBuilder library) {
     library.directives.add(Directive.partOf(CodeGen.currentFile));
   }
 }
+
+enum DiscoveryMode { inputLibrary, recursiveImports }
 
 extension Cascade<T> on T {
   void run(void Function(T target) fn) => fn(this);

@@ -1,3 +1,7 @@
+# 0.4.0
+
+- Added discoveryMode option to the CodeGen annotation
+
 # 0.3.7
 
 - Change how targets are defined to resolve conflicts with other code-gen packages like source_gen

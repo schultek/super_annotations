@@ -36,9 +36,7 @@ class RunnerBuilder {
       ..add(Uri.parse('dart:isolate'))
       ..add(Uri.parse('package:super_annotations/super_annotations.dart'));
 
-    await for (var library in buildStep.resolver.libraries) {
-      if (library.isInSdk) continue;
-
+    handleLibrary(LibraryElement library) {
       classTargets.addAll(inspectElements(
         library.units.expand((u) => u.classes),
         classAnnotationChecker,
@@ -56,6 +54,18 @@ class RunnerBuilder {
         functionAnnotationChecker,
         imports,
       ));
+    }
+
+    var discoveryMode = DiscoveryMode.values[
+        annotation.getField('discoveryMode')!.getField('index')!.toIntValue()!];
+
+    if (discoveryMode == DiscoveryMode.recursiveImports) {
+      await for (var library in buildStep.resolver.libraries) {
+        if (library.isInSdk) continue;
+        handleLibrary(library);
+      }
+    } else if (discoveryMode == DiscoveryMode.inputLibrary) {
+      handleLibrary(await buildStep.inputLibrary);
     }
 
     var runAfter = getHooks(annotation.getField('runAfter'), imports);
