@@ -1,3 +1,8 @@
+# 0.5.0
+
+- Updated analyzer version to >3.0.0
+- Fixed issue with enum constants
+
 # 0.4.0
 
 - Added discoveryMode option to the CodeGen annotation
