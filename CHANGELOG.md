@@ -1,3 +1,8 @@
+# 0.6.0
+
+- Update analyzer version to >=4.2.0
+- Update sdk constraint to >=2.17.0
+
 # 0.5.0
 
 - Updated analyzer version to >3.0.0

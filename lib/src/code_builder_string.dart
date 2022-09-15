@@ -116,7 +116,7 @@ extension ParameterCodeBuilder on ParameterElement {
         ..type = ${type.builder()}
         ..toThis = $isFieldFormal
         ..named = $isNamed
-        ..required = ${isNamed && isNotOptional}
+        ..required = ${isNamed && isRequired}
         ..defaultTo = ${hasDefaultValue ? "ResolvedValue($defaultValueCode, '${defaultValueCode!.escaped}')" : null}
         ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
       )
@@ -167,6 +167,7 @@ extension TypeParameterElementBuilder on TypeParameterElement {
 }
 
 class DartTypeVisitor extends TypeVisitor<String> {
+
   @override
   String visitDynamicType(DynamicType type) {
     return "refer('dynamic')";
@@ -216,6 +217,12 @@ class DartTypeVisitor extends TypeVisitor<String> {
   @override
   String visitVoidType(VoidType type) {
     return "refer('void')";
+  }
+
+  @override
+  // ignore: override_on_non_overriding_member
+  String visitRecordType(Object type) {
+    return "refer('record')";
   }
 }
 
