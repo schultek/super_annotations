@@ -1,7 +1,11 @@
+# 0.7.0
+
+- Update analyzer version to `>=4.6.0 <6.0.0`
+
 # 0.6.0
 
-- Update analyzer version to >=4.2.0
-- Update sdk constraint to >=2.17.0
+- Update analyzer version to `>=4.2.0 <5.0.0`
+- Update sdk constraint to `>=2.17.0 <3.0.0`
 
 # 0.5.0
 
