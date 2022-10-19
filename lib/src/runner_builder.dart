@@ -29,7 +29,7 @@ class RunnerBuilder {
 
   Future<void> create() async {
     Map<ClassElement, List<String>> classTargets = {};
-    Map<ClassElement, List<String>> enumTargets = {};
+    Map<EnumElement, List<String>> enumTargets = {};
     Map<FunctionElement, List<String>> functionTargets = {};
 
     var imports = ImportsBuilder(buildStep.inputId)
@@ -44,7 +44,7 @@ class RunnerBuilder {
       ));
 
       enumTargets.addAll(inspectElements(
-        library.units.expand((u) => u.enums),
+        library.units.expand((u) => u.enums2),
         enumAnnotationChecker,
         imports,
       ));
@@ -105,7 +105,7 @@ class RunnerBuilder {
     for (var elem in elements) {
       for (var meta in elem.metadata) {
         if (meta.element is ConstructorElement) {
-          var parent = (meta.element! as ConstructorElement).enclosingElement;
+          var parent = (meta.element! as ConstructorElement).enclosingElement3;
           if (checker.isAssignableFrom(parent)) {
             (targets[elem] ??= []).add(meta.toSource().substring(1));
             imports.add(meta.element!.library!.source.uri);
@@ -128,8 +128,8 @@ class RunnerBuilder {
     for (var o in object.toListValue() ?? <DartObject>[]) {
       var fn = o.toFunctionValue();
       if (fn != null) {
-        if (fn.isStatic && fn.enclosingElement is ClassElement) {
-          hooks.add('${fn.enclosingElement.name}.${fn.name}');
+        if (fn.isStatic && fn.enclosingElement3 is ClassElement) {
+          hooks.add('${fn.enclosingElement3.name}.${fn.name}');
         } else {
           hooks.add(fn.name);
         }

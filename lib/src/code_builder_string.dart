@@ -7,35 +7,37 @@ import 'package:analyzer/dart/element/type_visitor.dart';
 
 import 'imports_builder.dart';
 
+extension EnumCodeBuilder on EnumElement {
+  String builder(ImportsBuilder imports, [List<String> writes = const []]) {
+    return """
+      Enum((e) => e
+        ..name = '${name.escaped}'
+        ..values.addAll([${fields.where((f) => f.isEnumConstant).map((v) => v.builder(imports)).join(',')}])
+        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
+      )
+      ${writes.map((w) => "..run((e) => $w.apply(e, l))").join("\n")};
+    """;
+  }
+}
+
 extension ClassCodeBuilder on ClassElement {
   String builder(ImportsBuilder imports, [List<String> writes = const []]) {
-    if (isEnum) {
-      return """
-        Enum((e) => e
-          ..name = '${name.escaped}'
-          ..values.addAll([${fields.where((f) => f.isEnumConstant).map((v) => v.builder(imports)).join(',')}])
-          ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
-        )
-        ${writes.map((w) => "..run((e) => $w.apply(e, l))").join("\n")};
-      """;
-    } else {
-      return """
-        Class((c) => c
-          ..name = '${name.escaped}'
-          ${isAbstract ? '..abstract = true' : ''}
-          ${supertype != null ? "..extend = ${supertype!.builder()}" : ''}
-          ${typeParameters.isNotEmpty ? "..types.addAll([${typeParameters.map((t) => t.builder()).join(',')}])" : ''}
-          ${interfaces.isNotEmpty ? "..implements.addAll([${interfaces.map((t) => t.builder()).join(',')}])" : ''}
-          ${fields.isNotEmpty ? "..fields.addAll([${fields.map((f) => f.builder(imports)).join(',')}])" : ''}
-          ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder(imports)).join(',')}])" : ''}
-          ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => m.builder()).join(',')}])" : ''}
-          ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder(imports)).join(',')}])" : ''}
-          ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
-          ${writes.map((w) => "..run((c) => $w.modify(c))").join("\n")}
-        )
-        ${writes.map((w) => "..run((c) => $w.apply(c, l))").join("\n")};
-      """;
-    }
+    return """
+      Class((c) => c
+        ..name = '${name.escaped}'
+        ${isAbstract ? '..abstract = true' : ''}
+        ${supertype != null ? "..extend = ${supertype!.builder()}" : ''}
+        ${typeParameters.isNotEmpty ? "..types.addAll([${typeParameters.map((t) => t.builder()).join(',')}])" : ''}
+        ${interfaces.isNotEmpty ? "..implements.addAll([${interfaces.map((t) => t.builder()).join(',')}])" : ''}
+        ${fields.isNotEmpty ? "..fields.addAll([${fields.map((f) => f.builder(imports)).join(',')}])" : ''}
+        ${constructors.isNotEmpty ? "..constructors.addAll([${constructors.map((c) => c.builder(imports)).join(',')}])" : ''}
+        ${mixins.isNotEmpty ? "..mixins.addAll([${mixins.map((m) => m.builder()).join(',')}])" : ''}
+        ${methods.isNotEmpty ? "..methods.addAll([${methods.map((m) => m.builder(imports)).join(',')}])" : ''}
+        ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
+        ${writes.map((w) => "..run((c) => $w.modify(c))").join("\n")}
+      )
+      ${writes.map((w) => "..run((c) => $w.apply(c, l))").join("\n")};
+    """;
   }
 }
 
@@ -167,7 +169,6 @@ extension TypeParameterElementBuilder on TypeParameterElement {
 }
 
 class DartTypeVisitor extends TypeVisitor<String> {
-
   @override
   String visitDynamicType(DynamicType type) {
     return "refer('dynamic')";
@@ -191,7 +192,7 @@ class DartTypeVisitor extends TypeVisitor<String> {
   String visitInterfaceType(InterfaceType type) {
     return """
       TypeReference((t) => t
-        ..symbol = '${type.element.name.escaped}'
+        ..symbol = '${type.element2.name.escaped}'
         ..isNullable = ${type.nullabilitySuffix == NullabilitySuffix.question}
         ${type.typeArguments.isNotEmpty ? '..types.addAll([${type.typeArguments.map((t) => t.builder()).join(', ')}])' : ''}
       )
@@ -207,7 +208,7 @@ class DartTypeVisitor extends TypeVisitor<String> {
   String visitTypeParameterType(TypeParameterType type) {
     return """
       TypeReference((t) => t
-        ..symbol = '${type.element.name.escaped}'
+        ..symbol = '${type.element2.name.escaped}'
         ..isNullable = ${type.nullabilitySuffix == NullabilitySuffix.question}
         ${!type.bound.isDynamic ? "..bound = ${type.bound.builder()}" : ''}
       )

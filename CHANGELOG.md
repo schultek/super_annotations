@@ -1,3 +1,7 @@
+# 0.7.1
+
+- Fixed removing deprecated analyzer members
+
 # 0.7.0
 
 - Update analyzer version to `>=4.6.0 <6.0.0`
