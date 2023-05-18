@@ -225,6 +225,11 @@ class DartTypeVisitor extends TypeVisitor<String> {
   String visitRecordType(Object type) {
     return "refer('record')";
   }
+
+  @override
+  String visitInvalidType(InvalidType type) {
+    return "refer('invalid')";
+  }
 }
 
 extension StringEscaped on String {
