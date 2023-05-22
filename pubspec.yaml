@@ -5,7 +5,7 @@ repository: https://github.com/schultek/super_annotations
 issue_tracker: https://github.com/schultek/super_annotations/issues
 
 environment:
-  sdk: '>=2.17.0 <3.0.0'
+  sdk: '>=2.17.0 <=3.0.1'
 
 dependencies:
   analyzer: '>=4.6.0 <6.0.0'
