@@ -44,7 +44,7 @@ class RunnerBuilder {
       ));
 
       enumTargets.addAll(inspectElements(
-        library.units.expand((u) => u.enums2),
+        library.units.expand((u) => u.enums),
         enumAnnotationChecker,
         imports,
       ));
@@ -105,7 +105,7 @@ class RunnerBuilder {
     for (var elem in elements) {
       for (var meta in elem.metadata) {
         if (meta.element is ConstructorElement) {
-          var parent = (meta.element! as ConstructorElement).enclosingElement3;
+          var parent = (meta.element! as ConstructorElement).enclosingElement;
           if (checker.isAssignableFrom(parent)) {
             (targets[elem] ??= []).add(meta.toSource().substring(1));
             imports.add(meta.element!.library!.source.uri);
@@ -128,8 +128,8 @@ class RunnerBuilder {
     for (var o in object.toListValue() ?? <DartObject>[]) {
       var fn = o.toFunctionValue();
       if (fn != null) {
-        if (fn.isStatic && fn.enclosingElement3 is ClassElement) {
-          hooks.add('${fn.enclosingElement3.name}.${fn.name}');
+        if (fn.isStatic && fn.enclosingElement is ClassElement) {
+          hooks.add('${fn.enclosingElement.name}.${fn.name}');
         } else {
           hooks.add(fn.name);
         }

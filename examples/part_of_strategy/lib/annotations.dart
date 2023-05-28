@@ -7,6 +7,7 @@ class MyAnnotation extends ClassAnnotation {
     output.body.add(Mixin((e) => e
       ..name = '_\$${target.name}'
       ..methods.add(Method((m) => m
+        ..returns = refer('void')
         ..name = 'hello'
         ..body = Code("print('World');")))));
   }

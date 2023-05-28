@@ -1,7 +1,7 @@
 part of 'main.dart';
 
 mixin _$MyClass {
-  hello() {
+  void hello() {
     print('World');
   }
 }

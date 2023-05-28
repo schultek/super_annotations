@@ -168,7 +168,7 @@ extension TypeParameterElementBuilder on TypeParameterElement {
   }
 }
 
-class DartTypeVisitor extends TypeVisitor<String> {
+class DartTypeVisitor extends UnifyingTypeVisitor<String> {
   @override
   String visitDynamicType(DynamicType type) {
     return "refer('dynamic')";
@@ -192,7 +192,7 @@ class DartTypeVisitor extends TypeVisitor<String> {
   String visitInterfaceType(InterfaceType type) {
     return """
       TypeReference((t) => t
-        ..symbol = '${type.element2.name.escaped}'
+        ..symbol = '${type.element.name.escaped}'
         ..isNullable = ${type.nullabilitySuffix == NullabilitySuffix.question}
         ${type.typeArguments.isNotEmpty ? '..types.addAll([${type.typeArguments.map((t) => t.builder()).join(', ')}])' : ''}
       )
@@ -208,9 +208,9 @@ class DartTypeVisitor extends TypeVisitor<String> {
   String visitTypeParameterType(TypeParameterType type) {
     return """
       TypeReference((t) => t
-        ..symbol = '${type.element2.name.escaped}'
+        ..symbol = '${type.element.name.escaped}'
         ..isNullable = ${type.nullabilitySuffix == NullabilitySuffix.question}
-        ${!type.bound.isDynamic ? "..bound = ${type.bound.builder()}" : ''}
+        ${type.bound is! DynamicType ? "..bound = ${type.bound.builder()}" : ''}
       )
     """;
   }
@@ -221,9 +221,13 @@ class DartTypeVisitor extends TypeVisitor<String> {
   }
 
   @override
-  // ignore: override_on_non_overriding_member
   String visitRecordType(Object type) {
     return "refer('record')";
+  }
+
+  @override
+  String visitDartType(DartType type) {
+    return "refer('${type.getDisplayString(withNullability: true)}')";
   }
 }
 
