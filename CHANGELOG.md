@@ -1,3 +1,7 @@
+# 0.8.1
+
+- Update readme
+
 # 0.8.0
 
 - Update analyzer version to `^5.2.0`
