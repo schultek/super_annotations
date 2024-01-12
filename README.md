@@ -8,7 +8,7 @@ Hassle-free static metaprogramming as you dream it. Use code generation and cust
 For the first time, this makes code generation applicable for all kinds of projects. 
 No complex setup, no experience in writing builders needed.
 
-> While this package is fully functional, it should be considered more of a concept piece for now, on how to do static metaprogramming in dart.
+> While this package is fully functional, it should be considered more of a concept piece on how to do static metaprogramming in dart.
 > Some parts took inspiration from [this github discussion](https://github.com/dart-lang/language/issues/1482).
 
 ## Outline
@@ -26,8 +26,6 @@ No complex setup, no experience in writing builders needed.
 - [Examples](#examples)
 - [How does it work?](#how-does-it-work)
   - [Bonus: Why super?](#bonus-why-super)
-
-> This package is still in active development. If you have any feedback or feature requests, write me and issue on github.
 
 ## Get Started
 
