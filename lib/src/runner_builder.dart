@@ -5,7 +5,7 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
-import 'package:path/path.dart' as path;
+import 'package:path/path.dart' as path show posix;
 import 'package:source_gen/source_gen.dart';
 
 import '../super_annotations.dart';
@@ -81,7 +81,7 @@ class RunnerBuilder {
       ${imports.write()}
       
       void main(List<String> args, SendPort port) {
-        CodeGen.currentFile = '${path.basename(buildStep.inputId.path)}';
+        CodeGen.currentFile = '${path.posix.basename(buildStep.inputId.path)}';
         CodeGen.currentTarget = '${target.escaped}';
         var library = Library((l) {
           ${runBefore.map((fn) => '$fn(l);\n').join()}

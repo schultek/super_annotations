@@ -1,5 +1,5 @@
 import 'package:build/build.dart';
-import 'package:path/path.dart' as path;
+import 'package:path/path.dart' as path show posix;
 
 class ImportsBuilder {
   final Set<Uri> _imports = {};
@@ -14,8 +14,8 @@ class ImportsBuilder {
 
     for (var import in _imports) {
       if (import.isScheme('asset')) {
-        var relativePath =
-            path.relative(import.path, from: path.dirname(_input.uri.path));
+        var relativePath = path.posix
+            .relative(import.path, from: path.posix.dirname(_input.uri.path));
 
         relative.add(relativePath);
       } else if (import.isScheme('package') &&
@@ -27,7 +27,7 @@ class ImportsBuilder {
             .replace(pathSegments: _input.uri.pathSegments.skip(1))
             .path;
         var relativePath =
-            path.relative(libPath, from: path.dirname(inputPath));
+            path.posix.relative(libPath, from: path.posix.dirname(inputPath));
 
         relative.add(relativePath);
       } else if (import.scheme == 'dart') {
