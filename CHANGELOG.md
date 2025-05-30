@@ -1,3 +1,7 @@
+# 0.8.3
+
+- Fix relative imports on Windows
+
 # 0.8.2
 
 - Update analyzer version to `^6.0.0`

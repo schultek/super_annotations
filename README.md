@@ -8,9 +8,6 @@ Hassle-free static metaprogramming as you dream it. Use code generation and cust
 For the first time, this makes code generation applicable for all kinds of projects. 
 No complex setup, no experience in writing builders needed.
 
-> While this package is fully functional, it should be considered more of a concept piece on how to do static metaprogramming in dart.
-> Some parts took inspiration from [this github discussion](https://github.com/dart-lang/language/issues/1482).
-
 ## Outline
 
 - [Get Started](#get-started)
@@ -32,11 +29,9 @@ No complex setup, no experience in writing builders needed.
 First, add `super_annotations` as a dependency, and `build_runner` as a dev_dependency.
 
 ```shell script
-pub add super_annotations
-pub add build_runner --dev
+dart pub add super_annotations
+dart pub add build_runner --dev
 ```
-
-> For every `pub` command prefix it with either `dart` or `flutter` depending on your project.
 
 Next, define your custom annotation like this:
 
