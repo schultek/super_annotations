@@ -47,7 +47,10 @@ class SuperAnnotationsBuilder extends Builder {
               buildStep, target, codeGenAnnotation, options.config)
           .run();
 
-      await buildStep.writeAsString(outputId, DartFormatter().format(output));
+      await buildStep.writeAsString(
+          outputId,
+          DartFormatter(languageVersion: DartFormatter.latestLanguageVersion)
+              .format(output));
     }
   }
 

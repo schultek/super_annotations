@@ -25,6 +25,7 @@ class DataClass extends ClassAnnotation {
     var toString = Method((m) => m
       ..name = 'toString'
       ..returns = refer('String')
+      ..annotations.add(refer('override'))
       ..body = literalString(
               '${target.name}{${target.fields.map((f) => '${f.name}: \$${f.name}').join(', ')}}')
           .code);

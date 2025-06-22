@@ -5,8 +5,7 @@ mixin _$Union {
     required TResult Function(Data value) data,
     required TResult Function(Loading value) loading,
     required TResult Function(ErrorDetails value) error,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 }
 
 class Data implements Union {
@@ -14,23 +13,23 @@ class Data implements Union {
 
   final int value;
 
+  @override
   TResult map<TResult>({
     required TResult Function(Data value) data,
     required TResult Function(Loading value) loading,
     required TResult Function(ErrorDetails value) error,
-  }) =>
-      data(this);
+  }) => data(this);
 }
 
 class Loading implements Union {
   const Loading();
 
+  @override
   TResult map<TResult>({
     required TResult Function(Data value) data,
     required TResult Function(Loading value) loading,
     required TResult Function(ErrorDetails value) error,
-  }) =>
-      loading(this);
+  }) => loading(this);
 }
 
 class ErrorDetails implements Union {
@@ -38,10 +37,10 @@ class ErrorDetails implements Union {
 
   final String? message;
 
+  @override
   TResult map<TResult>({
     required TResult Function(Data value) data,
     required TResult Function(Loading value) loading,
     required TResult Function(ErrorDetails value) error,
-  }) =>
-      error(this);
+  }) => error(this);
 }

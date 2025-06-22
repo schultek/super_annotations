@@ -1,11 +1,11 @@
 part of 'main.dart';
 
 class MyClass extends $MyClass {
-  List<String> _logs = [];
+  final List<String> _logs = [];
 
   @override
   void hello(String name) {
-    _logs.add('Method invoked: hello(${name})');
+    _logs.add('Method invoked: hello($name)');
     return super.hello(name);
   }
 

@@ -10,16 +10,16 @@ topics:
   - annotations
 
 environment:
-  sdk: '>=2.17.0 <4.0.0'
+  sdk: ^3.6.0
 
 dependencies:
-  analyzer: ^6.0.0
+  analyzer: ^7.0.0
   build: ^2.3.1
   code_builder: ^4.3.0
-  dart_style: ^2.2.4
+  dart_style: ^3.0.0
   path: ^1.8.0
-  source_gen: ^1.2.3
+  source_gen: ^2.0.0
 
 dev_dependencies:
-  build_runner: ^2.2.0
-  lints: ^2.0.0
+  build_runner: ^2.4.0
+  lints: ^5.0.0

@@ -11,7 +11,7 @@ part 'main.g.dart';
 @MyAnnotation()
 class MyClass {
   @WrapGetter('data')
-  String _internal;
+  final String _internal;
 
   MyClass(this._internal);
 }

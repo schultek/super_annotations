@@ -1,4 +1,4 @@
-library super_annotations;
+library;
 
 import 'package:code_builder/code_builder.dart';
 // ignore: implementation_imports

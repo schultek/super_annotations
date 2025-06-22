@@ -1,3 +1,5 @@
+// ignore_for_file: annotate_overrides
+
 @CodeGen(runAfter: [CodeGen.addPartOfDirective])
 library main;
 

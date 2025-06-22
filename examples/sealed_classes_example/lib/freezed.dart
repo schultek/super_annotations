@@ -19,7 +19,7 @@ class Freezed extends ClassAnnotation {
             ..type = FunctionType((ft) => ft
               ..returnType = refer('TResult')
               ..requiredParameters
-                  .add(refer(factory.redirect!.symbol! + ' value')))
+                  .add(refer('${factory.redirect!.symbol!} value')))
             ..named = true
             ..required = true),
       ]));
@@ -56,9 +56,12 @@ class Freezed extends ClassAnnotation {
                   ..toThis = true
                   ..type = null)))))
           ..methods.addAll([
-            mapMethod.rebuild((m) => m.body =
+            mapMethod.rebuild((m) {
+              m.annotations.add(refer('override'));
+              m.body =
                 refer(factory.name ?? factory.redirect!.symbol!.toLowerCase())
-                    .call([refer('this')]).code),
+                    .call([refer('this')]).code;
+            }),
           ]));
         output.body.add(fc);
       }

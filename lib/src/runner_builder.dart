@@ -93,7 +93,8 @@ class RunnerBuilder {
     """;
 
     await File(runnerId.path).writeAsString(
-        DartFormatter(fixes: [StyleFix.docComments]).format(runnerCode));
+        DartFormatter(languageVersion: DartFormatter.latestLanguageVersion)
+            .format(runnerCode));
   }
 
   Map<E, List<String>> inspectElements<E extends Element>(
@@ -105,7 +106,7 @@ class RunnerBuilder {
     for (var elem in elements) {
       for (var meta in elem.metadata) {
         if (meta.element is ConstructorElement) {
-          var parent = (meta.element! as ConstructorElement).enclosingElement;
+          var parent = (meta.element! as ConstructorElement).enclosingElement3;
           if (checker.isAssignableFrom(parent)) {
             (targets[elem] ??= []).add(meta.toSource().substring(1));
             imports.add(meta.element!.library!.source.uri);
@@ -128,8 +129,8 @@ class RunnerBuilder {
     for (var o in object.toListValue() ?? <DartObject>[]) {
       var fn = o.toFunctionValue();
       if (fn != null) {
-        if (fn.isStatic && fn.enclosingElement is ClassElement) {
-          hooks.add('${fn.enclosingElement.name}.${fn.name}');
+        if (fn.isStatic && fn.enclosingElement3 is ClassElement) {
+          hooks.add('${fn.enclosingElement3.name}.${fn.name}');
         } else {
           hooks.add(fn.name);
         }
