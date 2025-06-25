@@ -1,3 +1,9 @@
+# 0.9.0
+
+- Bump sdk constraint to `^3.6.0`
+- Update analyzer version to `^7.0.0`
+- Update sourge_gen version to `^2.0.0`
+
 # 0.8.3
 
 - Fix relative imports on Windows
