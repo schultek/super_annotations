@@ -1,8 +1,14 @@
+# 0.10.0
+
+- Require `analyzer` 8.1.0 and allow analyzer 9.0.0.
+- Require `build` 4.0.0.
+- Require `source_gen` 4.0.0.
+
 # 0.9.0
 
 - Bump sdk constraint to `^3.6.0`
-- Update analyzer version to `^7.0.0`
-- Update sourge_gen version to `^2.0.0`
+- Require `analyzer` 7.0.0.
+- Require `sourge_gen` 2.0.0.
 
 # 0.8.3
 
@@ -10,11 +16,11 @@
 
 # 0.8.2
 
-- Update analyzer version to `^6.0.0`
+- Require `analyzer` 6.0.0.
 
 # 0.8.1
 
-- Update readme
+- Update readme.
 
 # 0.8.0
 

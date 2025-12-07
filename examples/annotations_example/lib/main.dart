@@ -1,5 +1,5 @@
 @CodeGen()
-library main;
+library;
 
 import 'package:super_annotations/super_annotations.dart';
 

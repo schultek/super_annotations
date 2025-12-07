@@ -12,10 +12,10 @@ import '../super_annotations.dart';
 import 'code_builder_string.dart';
 import 'imports_builder.dart';
 
-const classAnnotationChecker = TypeChecker.fromRuntime(ClassAnnotation);
-const enumAnnotationChecker = TypeChecker.fromRuntime(EnumAnnotation);
-const functionAnnotationChecker = TypeChecker.fromRuntime(FunctionAnnotation);
-const codeGenChecker = TypeChecker.fromRuntime(CodeGen);
+const classAnnotationChecker = TypeChecker.typeNamed(ClassAnnotation);
+const enumAnnotationChecker = TypeChecker.typeNamed(EnumAnnotation);
+const functionAnnotationChecker = TypeChecker.typeNamed(FunctionAnnotation);
+const codeGenChecker = TypeChecker.typeNamed(CodeGen);
 
 class RunnerBuilder {
   final BuildStep buildStep;
@@ -30,7 +30,7 @@ class RunnerBuilder {
   Future<void> create() async {
     Map<ClassElement, List<String>> classTargets = {};
     Map<EnumElement, List<String>> enumTargets = {};
-    Map<FunctionElement, List<String>> functionTargets = {};
+    Map<TopLevelFunctionElement, List<String>> functionTargets = {};
 
     var imports = ImportsBuilder(buildStep.inputId)
       ..add(Uri.parse('dart:isolate'))
@@ -38,19 +38,19 @@ class RunnerBuilder {
 
     handleLibrary(LibraryElement library) {
       classTargets.addAll(inspectElements(
-        library.units.expand((u) => u.classes),
+        library.classes,
         classAnnotationChecker,
         imports,
       ));
 
       enumTargets.addAll(inspectElements(
-        library.units.expand((u) => u.enums),
+        library.enums,
         enumAnnotationChecker,
         imports,
       ));
 
       functionTargets.addAll(inspectElements(
-        library.units.expand((u) => u.functions),
+        library.topLevelFunctions,
         functionAnnotationChecker,
         imports,
       ));
@@ -104,18 +104,18 @@ class RunnerBuilder {
   ) {
     Map<E, List<String>> targets = {};
     for (var elem in elements) {
-      for (var meta in elem.metadata) {
+      for (var meta in elem.metadata.annotations) {
         if (meta.element is ConstructorElement) {
-          var parent = (meta.element! as ConstructorElement).enclosingElement3;
+          var parent = (meta.element! as ConstructorElement).enclosingElement;
           if (checker.isAssignableFrom(parent)) {
             (targets[elem] ??= []).add(meta.toSource().substring(1));
-            imports.add(meta.element!.library!.source.uri);
+            imports.add(meta.element!.library!.firstFragment.source.uri);
           }
         } else if (meta.element is PropertyAccessorElement) {
           var type = (meta.element! as PropertyAccessorElement).returnType;
           if (checker.isAssignableFromType(type)) {
             (targets[elem] ??= []).add(meta.toSource().substring(1));
-            imports.add(meta.element!.library!.source.uri);
+            imports.add(meta.element!.library!.firstFragment.source.uri);
           }
         }
       }
@@ -129,12 +129,12 @@ class RunnerBuilder {
     for (var o in object.toListValue() ?? <DartObject>[]) {
       var fn = o.toFunctionValue();
       if (fn != null) {
-        if (fn.isStatic && fn.enclosingElement3 is ClassElement) {
-          hooks.add('${fn.enclosingElement3.name}.${fn.name}');
+        if (fn.isStatic && fn.enclosingElement is ClassElement) {
+          hooks.add('${fn.enclosingElement!.name}.${fn.name}');
         } else {
-          hooks.add(fn.name);
+          hooks.add(fn.name!);
         }
-        imports.add(fn.library.source.uri);
+        imports.add(fn.library.firstFragment.source.uri);
       }
     }
     return hooks;
