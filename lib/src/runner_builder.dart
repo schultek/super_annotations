@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
@@ -33,7 +32,7 @@ class RunnerBuilder {
     Map<TopLevelFunctionElement, List<String>> functionTargets = {};
 
     var imports = ImportsBuilder(buildStep.inputId)
-      ..add(Uri.parse('dart:isolate'))
+      ..add(Uri.parse('dart:io'))
       ..add(Uri.parse('package:super_annotations/super_annotations.dart'));
 
     handleLibrary(LibraryElement library) {
@@ -80,7 +79,7 @@ class RunnerBuilder {
     var runnerCode = """
       ${imports.write()}
       
-      void main(List<String> args, SendPort port) {
+      void main() {
         CodeGen.currentFile = '${path.posix.basename(buildStep.inputId.path)}';
         CodeGen.currentTarget = '${target.escaped}';
         var library = Library((l) {
@@ -88,7 +87,7 @@ class RunnerBuilder {
           ${runAnnotations.join('\n')}
           ${runAfter.map((fn) => '$fn(l);\n').join()}
         });
-        port.send(library.accept(DartEmitter.scoped(useNullSafetySyntax: true)).toString());
+        stdout.write(library.accept(DartEmitter.scoped(useNullSafetySyntax: true)).toString());
       }
     """;
 
@@ -141,35 +140,31 @@ class RunnerBuilder {
   }
 
   Future<String> execute() async {
-    var dataPort = ReceivePort();
-
-    var resultFuture = dataPort.first;
-
-    try {
-      await Isolate.spawnUri(
-        runnerId.uri,
-        [],
-        dataPort.sendPort,
-        onExit: dataPort.sendPort,
-        onError: dataPort.sendPort,
-      );
-    } on IsolateSpawnException catch (e) {
-      var m = 'Unable to spawn isolate: ';
-      if (e.message.startsWith(m)) {
-        var message = e.message.substring(m.length);
-        throw RunnerException(message);
-      } else {
-        rethrow;
-      }
+    // In AOT mode, Platform.resolvedExecutable points to dartaotruntime,
+    // but we need the dart VM to run the generated source file.
+    var dartExecutable = Platform.resolvedExecutable;
+    var execName = Uri.file(dartExecutable).pathSegments.last;
+    if (execName == 'dartaotruntime' || execName == 'dartaotruntime.exe') {
+      var binDir = File(dartExecutable).parent.path;
+      dartExecutable = '$binDir${Platform.pathSeparator}dart';
     }
 
-    var result = await resultFuture;
+    try {
+      var result = await Process.run(
+        dartExecutable,
+        [runnerId.path],
+      );
 
-    if (result is String) {
-      return result;
-    } else {
-      print(result);
-      throw Exception('Runner did fail with the output above.');
+      if (result.exitCode == 0) {
+        return result.stdout as String;
+      } else {
+        var error = (result.stderr as String).isNotEmpty
+            ? result.stderr as String
+            : result.stdout as String;
+        throw RunnerException(error);
+      }
+    } on ProcessException catch (e) {
+      throw RunnerException(e.message);
     }
   }
 
