@@ -5,6 +5,7 @@ mixin _$Person {
   int get age;
   Person copyWith({String? name, int? age}) =>
       Person(name ?? this.name, age ?? this.age);
+
   @override
   String toString() => 'Person{name: $name, age: $age}';
 }
@@ -17,6 +18,7 @@ mixin _$Animal {
     height ?? this.height,
     isMammal: isMammal ?? this.isMammal,
   );
+
   @override
   String toString() =>
       'Animal{name: $name, height: $height, isMammal: $isMammal}';
