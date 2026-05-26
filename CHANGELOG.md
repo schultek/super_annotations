@@ -1,3 +1,7 @@
+# 0.11.0
+
+- Support running in build_runner aot mode.
+
 # 0.10.0
 
 - Require `analyzer` 8.1.0 and allow analyzer 9.0.0.
