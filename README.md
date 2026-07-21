@@ -134,7 +134,7 @@ library main;
 ```
 
 Using this configuration, two files `.client.dart` and `.server.dart` would be generated instead of the `.g.dart` file.
-Your annotations will be called once for each target. In your annotations code, you can use `CodeGen.currentContext.target` to get the current target:
+Your annotations will be called once for each target. In your annotations code, you can use `CodeGen.currentTarget` to get the current target:
 
 ```dart
 class MyAnnotation extends ClassAnnotation {
@@ -142,9 +142,9 @@ class MyAnnotation extends ClassAnnotation {
 
   @override
   void apply(Class target, LibraryBuilder output) {
-    if (CodeGen.currentContext.target == 'client') {
+    if (CodeGen.currentTarget == 'client') {
       output.body.add(Code('// GENERATED CLIENT LIBRARY'));
-    } else if (CodeGen.currentContext.target == 'server') {
+    } else if (CodeGen.currentTarget == 'server') {
       output.body.add(Code('// GENERATED SERVER LIBRARY'));
     }
   }
