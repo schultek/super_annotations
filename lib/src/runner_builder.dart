@@ -35,7 +35,7 @@ class RunnerBuilder {
       ..add(Uri.parse('dart:io'))
       ..add(Uri.parse('package:super_annotations/super_annotations.dart'));
 
-    handleLibrary(LibraryElement library) {
+    void handleLibrary(LibraryElement library) {
       classTargets.addAll(inspectElements(
         library.classes,
         classAnnotationChecker,
@@ -70,10 +70,25 @@ class RunnerBuilder {
     var runAfter = getHooks(annotation.getField('runAfter'), imports);
     var runBefore = getHooks(annotation.getField('runBefore'), imports);
 
+    String updateCurrentTargetSourceFile(String? targetSourceFile) =>
+        'CodeGen.currentTargetSourceFile = ${targetSourceFile == null ? 'null' : '\'$targetSourceFile\''};';
+
     var runAnnotations = [
-      ...classTargets.entries.map((e) => e.key.builder(imports, e.value)),
-      ...enumTargets.entries.map((e) => e.key.builder(imports, e.value)),
-      ...functionTargets.entries.map((e) => e.key.builder(imports, e.value)),
+      ...classTargets.entries.map((e) => [
+            updateCurrentTargetSourceFile(
+                path.posix.basename(e.key.library.uri.toString())),
+            e.key.builder(imports, e.value)
+          ].join()),
+      ...enumTargets.entries.map((e) => [
+            updateCurrentTargetSourceFile(
+                path.posix.basename(e.key.library.uri.toString())),
+            e.key.builder(imports, e.value)
+          ].join()),
+      ...functionTargets.entries.map((e) => [
+            updateCurrentTargetSourceFile(
+                path.posix.basename(e.key.library.uri.toString())),
+            e.key.builder(imports, e.value)
+          ].join()),
     ];
 
     var runnerCode = """
@@ -82,9 +97,11 @@ class RunnerBuilder {
       void main() {
         CodeGen.currentFile = '${path.posix.basename(buildStep.inputId.path)}';
         CodeGen.currentTarget = '${target.escaped}';
+
         var library = Library((l) {
           ${runBefore.map((fn) => '$fn(l);\n').join()}
           ${runAnnotations.join('\n')}
+          ${updateCurrentTargetSourceFile(null)}
           ${runAfter.map((fn) => '$fn(l);\n').join()}
         });
         stdout.write(library.accept(DartEmitter.scoped(useNullSafetySyntax: true)).toString());

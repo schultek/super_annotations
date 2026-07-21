@@ -43,6 +43,9 @@ class CodeGen {
   /// Contains the current target
   static String currentTarget = '';
 
+  /// Contains the source file of the current target
+  static String? currentTargetSourceFile;
+
   /// Functions to be run at the beginning of the build phase,
   /// before any annotation
   final List<CodeGenHook> runBefore;
