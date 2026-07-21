@@ -36,26 +36,15 @@ abstract class FunctionAnnotation extends SuperAnnotation<Method> {
 
 typedef CodeGenHook = void Function(LibraryBuilder output);
 
-class CodeGenContext {
+class CodeGen {
   /// Contains the path to the current source file for the build
-  final String file;
+  static String currentFile = '';
 
   /// Contains the current target
-  final String target;
+  static String currentTarget = '';
 
   /// Contains the source file of the current target
-  final String? targetSourceFile;
-
-  const CodeGenContext(
-      {required this.file,
-      required this.target,
-      required this.targetSourceFile});
-}
-
-class CodeGen {
-  /// Contains the context for the build
-  static CodeGenContext currentContext =
-      const CodeGenContext(file: '', target: '', targetSourceFile: '');
+  static String? currentTargetSourceFile;
 
   /// Functions to be run at the beginning of the build phase,
   /// before any annotation
@@ -79,7 +68,7 @@ class CodeGen {
   });
 
   static void addPartOfDirective(LibraryBuilder library) {
-    library.directives.add(Directive.partOf(CodeGen.currentContext.file));
+    library.directives.add(Directive.partOf(CodeGen.currentFile));
   }
 }
 

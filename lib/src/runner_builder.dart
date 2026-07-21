@@ -35,9 +35,6 @@ class RunnerBuilder {
       ..add(Uri.parse('dart:io'))
       ..add(Uri.parse('package:super_annotations/super_annotations.dart'));
 
-    final currentFile = path.posix.basename(buildStep.inputId.path);
-    final currentTarget = target.escaped;
-
     void handleLibrary(LibraryElement library) {
       classTargets.addAll(inspectElements(
         library.classes,
@@ -73,41 +70,38 @@ class RunnerBuilder {
     var runAfter = getHooks(annotation.getField('runAfter'), imports);
     var runBefore = getHooks(annotation.getField('runBefore'), imports);
 
-    String updateCurrentContext(String? targetSourceFile) => """
-      CodeGen.currentContext = CodeGenContext(
-        file: '$currentFile',
-        target: '$currentTarget',
-        targetSourceFile: ${targetSourceFile == null ? 'null' : '\'$targetSourceFile\''},
-      );
-    """;
+    String updateCurrentTargetSourceFile(String? targetSourceFile) =>
+        'CodeGen.currentTargetSourceFile = ${targetSourceFile == null ? 'null' : '\'$targetSourceFile\''};';
 
     var runAnnotations = [
       ...classTargets.entries.map((e) => [
-            updateCurrentContext(
+            updateCurrentTargetSourceFile(
                 path.posix.basename(e.key.library.uri.toString())),
             e.key.builder(imports, e.value)
-          ].join('\n')),
+          ].join()),
       ...enumTargets.entries.map((e) => [
-            updateCurrentContext(
+            updateCurrentTargetSourceFile(
                 path.posix.basename(e.key.library.uri.toString())),
             e.key.builder(imports, e.value)
-          ].join('\n')),
+          ].join()),
       ...functionTargets.entries.map((e) => [
-            updateCurrentContext(
+            updateCurrentTargetSourceFile(
                 path.posix.basename(e.key.library.uri.toString())),
             e.key.builder(imports, e.value)
-          ].join('\n')),
+          ].join()),
     ];
 
     var runnerCode = """
       ${imports.write()}
       
       void main() {
-        ${updateCurrentContext(null)}
+        CodeGen.currentFile = '${path.posix.basename(buildStep.inputId.path)}';
+        CodeGen.currentTarget = '${target.escaped}';
+
         var library = Library((l) {
           ${runBefore.map((fn) => '$fn(l);\n').join()}
           ${runAnnotations.join('\n')}
-          ${updateCurrentContext(null)}
+          ${updateCurrentTargetSourceFile(null)}
           ${runAfter.map((fn) => '$fn(l);\n').join()}
         });
         stdout.write(library.accept(DartEmitter.scoped(useNullSafetySyntax: true)).toString());
