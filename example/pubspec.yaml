@@ -1,7 +1,7 @@
 name: super_annotations_example
 
 environment:
-  sdk: ^3.6.0
+  sdk: '>=3.7.0 <4.0.0'
 
 dependencies:
   super_annotations:
