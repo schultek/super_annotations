@@ -1,3 +1,9 @@
+# 0.12.0
+
+- Require sdk `>=3.7.0 <4.0.0`.
+- Require `analyzer` versions `>=13.0.0 <15.0.0`.
+- Allow `build` versions `>=4.0.0 <6.0.0`.
+
 # 0.11.0
 
 - Support running in build_runner aot mode.
